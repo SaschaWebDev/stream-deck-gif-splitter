@@ -79,13 +79,12 @@ export function useFFmpeg() {
     filename: string,
     cols: number,
     rows: number,
-    targetWidth: number,
-    targetHeight: number,
+    cellWidth: number,
+    cellHeight: number,
+    gap: number = 0,
   ): Promise<SplitResult[]> => {
     const ffmpeg = ffmpegRef.current!
 
-    const cellWidth = targetWidth / cols
-    const cellHeight = targetHeight / rows
     const total = rows * cols
 
     // Generate palette from the full cropped gif for consistent colors across all tiles
@@ -106,8 +105,8 @@ export function useFFmpeg() {
         count++
         setProgress({ phase: 'splitting', current: count, total })
 
-        const x = col * cellWidth
-        const y = row * cellHeight
+        const x = col * (cellWidth + gap)
+        const y = row * (cellHeight + gap)
         const outName = `out_${row}_${col}.gif`
 
         await ffmpeg.exec([
