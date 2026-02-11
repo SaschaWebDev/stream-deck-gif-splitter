@@ -1,7 +1,21 @@
 {
   "permissions": {
     "allow": [
-      "Bash(bun install)"
+      "Bash(bun install)",
+      "Bash(npx tsc:*)",
+      "Bash(npx --no-install tsc:*)",
+      "Bash(node_modules/.bin/tsc:*)",
+      "Bash(./node_modules/.bin/tsc:*)",
+      "Bash(npx vite build:*)",
+      "Bash(gh api:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:www.npmjs.com)",
+      "Bash(C:UserstitanAppDataLocalGitHubcligh.exe api repos/Malpp/DiscordGifSplitter/git/trees/master?recursive=1 --jq \".tree[].path\")",
+      "Bash(where:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebSearch",
+      "WebFetch(domain:ffmpegwasm.netlify.app)",
+      "Bash(npm install:*)"
     ]
   }
 }
