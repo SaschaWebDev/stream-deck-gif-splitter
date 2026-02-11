@@ -63,6 +63,7 @@ function App() {
   const preset = PRESETS[presetIndex];
   const targetWidth = preset.cols * preset.tileWidth;
   const targetHeight = preset.rows * preset.tileHeight;
+  const previewTileSize = Math.min(preset.tileWidth, 72);
 
   const performCrop = useCallback(
     async (f: File, tw: number, th: number) => {
@@ -221,12 +222,6 @@ function App() {
     }
   }, [results.length]);
 
-  const refreshTiles = useCallback(() => {
-    tileLoadCount.current = 0;
-    setTilesReady(false);
-    setTileSyncKey((k) => k + 1);
-  }, []);
-
   const downloadZip = useCallback(async () => {
     if (results.length === 0 || !file) return;
     setZipping(true);
@@ -379,11 +374,11 @@ function App() {
                 </label>
                 <div className='config-details'>
                   <span>
-                    {targetWidth} &times; {targetHeight}px canvas
+                    {targetWidth}px &times; {targetHeight}px canvas
                   </span>
                   <span>
                     {preset.cols} &times; {preset.rows} grid &mdash;{' '}
-                    {preset.cols * preset.rows} tiles at {preset.tileWidth}
+                    {preset.cols * preset.rows} tiles at {preset.tileWidth}px
                     &times;{preset.tileHeight}px
                   </span>
                 </div>
@@ -396,7 +391,7 @@ function App() {
             <p className='crop-description'>
               Your GIF
               {originalSize
-                ? ` (${originalSize.w} \u00d7 ${originalSize.h}px)`
+                ? ` (${originalSize.w}px \u00d7 ${originalSize.h}px)`
                 : ''}{' '}
               will be auto-cropped to {targetWidth} &times; {targetHeight}px
               (center crop). Review the result before splitting.
@@ -469,28 +464,7 @@ function App() {
                 <div className='results-header'>
                   <h2>Result</h2>
                   <div className='results-actions'>
-                    <button
-                      className='sync-button'
-                      onClick={refreshTiles}
-                      title='Restart all tile animations in sync'
-                    >
-                      <svg
-                        xmlns='http://www.w3.org/2000/svg'
-                        fill='none'
-                        viewBox='0 0 24 24'
-                        strokeWidth={1.5}
-                        stroke='currentColor'
-                        width='14'
-                        height='14'
-                      >
-                        <path
-                          strokeLinecap='round'
-                          strokeLinejoin='round'
-                          d='M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.992 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182M21.015 4.356v4.992'
-                        />
-                      </svg>
-                      Sync
-                    </button>
+                    <span className='device-pill'>{preset.label}</span>
                     <button
                       className='download-all-button'
                       onClick={downloadZip}
@@ -505,12 +479,30 @@ function App() {
                 {!tilesReady && (
                   <p className='status-text'>Loading tile previews...</p>
                 )}
-                <div className={`device-mockup${tilesReady ? ' revealed' : ''}`}>
-                  <div className='device-frame'>
+                <div
+                  className={`device-mockup${tilesReady ? ' revealed' : ''}`}
+                >
+                  <div className='device-cable'>
+                    <div className='device-cable-plug' />
+                  </div>
+                  <div
+                    className='device-frame'
+                    style={{
+                      width:
+                        preset.cols * previewTileSize +
+                        (preset.cols - 1) * 16 +
+                        48,
+                    }}
+                  >
+                    <img
+                      className='device-logo'
+                      src='/logo-stream-deck-gif-splitter.png'
+                      alt='Stream Deck GIF Splitter'
+                    />
                     <div
                       className='device-screen'
                       style={{
-                        gridTemplateColumns: `repeat(${preset.cols}, 1fr)`,
+                        gridTemplateColumns: `repeat(${preset.cols}, ${previewTileSize}px)`,
                       }}
                     >
                       {results.map((r) => (
@@ -550,10 +542,10 @@ function App() {
             <details className='faq-item'>
               <summary>Which Stream Deck models are supported?</summary>
               <p>
-                We currently support the Stream Deck MK.2 (5x3), Stream Deck
-                XL (8x4), Stream Deck Mini (3x2), Stream Deck + (4x2), and
-                Stream Deck Neo (4x2). Each preset automatically adjusts the
-                crop dimensions and tile sizes to match the device.
+                We currently support the Stream Deck MK.2 (5x3), Stream Deck XL
+                (8x4), Stream Deck Mini (3x2), Stream Deck + (4x2), and Stream
+                Deck Neo (4x2). Each preset automatically adjusts the crop
+                dimensions and tile sizes to match the device.
               </p>
             </details>
             <details className='faq-item'>
@@ -561,8 +553,18 @@ function App() {
               <p>
                 After downloading the zip, extract the folder and assign each
                 numbered tile to the corresponding button position in the Elgato
-                Stream Deck software. The tiles are numbered left-to-right,
-                top-to-bottom to match the button layout.
+                Stream Deck software. You can also drag and drop the gif tiles
+                onto the Stream Deck button below to insert them quicker. The
+                tiles are numbered left-to-right, top-to-bottom to match the
+                button layout. Check out {''}
+                <a
+                  href='https://youtu.be/uMJPHHkHC9k?si=nRqH2r-mB7Tkm97m&t=300'
+                  target='_blank'
+                  rel='noopener noreferrer'
+                >
+                  this video
+                </a>
+                {''} for a quick tutorial.
               </p>
             </details>
             <details className='faq-item'>
