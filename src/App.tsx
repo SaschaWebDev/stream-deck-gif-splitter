@@ -204,6 +204,7 @@ function App() {
       setResults(splitResults);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to split GIF');
+      resetProgress();
     }
   }, [
     file,
@@ -213,6 +214,7 @@ function App() {
     results,
     targetWidth,
     targetHeight,
+    resetProgress,
   ]);
 
   const handleTileLoad = useCallback(() => {
@@ -443,86 +445,93 @@ function App() {
                 ) : null}
               </div>
             </div>
+
+            {croppedPreview && (
+              <div className='split-button-wrapper'>
+                <button
+                  className='split-button'
+                  onClick={handleSplit}
+                  disabled={isSplitting}
+                >
+                  {isSplitting ? progressLabel : 'Split GIF'}
+                </button>
+                {error && !isCropping && (
+                  <button
+                    className='retry-button'
+                    onClick={handleSplit}
+                    disabled={isSplitting}
+                  >
+                    {error} — Click to retry
+                  </button>
+                )}
+              </div>
+            )}
           </section>
         )}
 
-        {/* Split & Results */}
-        {file && croppedPreview && (
+        {/* Results */}
+        {file && croppedPreview && results.length > 0 && (
           <section className='results-section'>
-            <button
-              className='split-button'
-              onClick={handleSplit}
-              disabled={isSplitting}
-            >
-              {isSplitting ? progressLabel : 'Split GIF'}
-            </button>
-
-            {error && !isCropping && <p className='error-text'>{error}</p>}
-
-            {results.length > 0 && (
-              <>
-                <div className='results-header'>
-                  <h2>Result</h2>
-                  <div className='results-actions'>
-                    <span className='device-pill'>{preset.label}</span>
-                    <button
-                      className='download-all-button'
-                      onClick={downloadZip}
-                      disabled={zipping}
-                    >
-                      {zipping
-                        ? 'Creating zip...'
-                        : `Download .zip (${results.length} tiles)`}
-                    </button>
-                  </div>
-                </div>
-                {!tilesReady && (
-                  <p className='status-text'>Loading tile previews...</p>
-                )}
-                <div
-                  className={`device-mockup${tilesReady ? ' revealed' : ''}`}
+            <div className='results-header'>
+              <h2>Result</h2>
+              <div className='results-actions'>
+                <span className='device-pill'>{preset.label}</span>
+                <button
+                  className='download-all-button'
+                  onClick={downloadZip}
+                  disabled={zipping}
                 >
-                  <div className='device-cable'>
-                    <div className='device-cable-plug' />
-                  </div>
-                  <div
-                    className='device-frame'
-                    style={{
-                      width:
-                        preset.cols * previewTileSize +
-                        (preset.cols - 1) * 16 +
-                        48,
-                    }}
-                  >
-                    <img
-                      className='device-logo'
-                      src='/logo-stream-deck-gif-splitter.png'
-                      alt='Stream Deck GIF Splitter'
-                    />
-                    <div
-                      className='device-screen'
-                      style={{
-                        gridTemplateColumns: `repeat(${preset.cols}, ${previewTileSize}px)`,
-                      }}
-                    >
-                      {results.map((r) => (
-                        <div
-                          key={`${r.row}-${r.col}`}
-                          className='device-button'
-                        >
-                          <img
-                            key={tileSyncKey}
-                            src={r.url}
-                            alt={r.filename}
-                            onLoad={handleTileLoad}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </>
+                  {zipping
+                    ? 'Creating zip...'
+                    : `Download .zip (${results.length} tiles)`}
+                </button>
+              </div>
+            </div>
+            {!tilesReady && (
+              <p className='status-text'>Loading tile previews...</p>
             )}
+            <div
+              className={`device-mockup${tilesReady ? ' revealed' : ''}`}
+            >
+              <div className='device-cable'>
+                <div className='device-cable-plug' />
+              </div>
+              <div
+                className='device-frame'
+                style={{
+                  maxWidth:
+                    preset.cols * previewTileSize +
+                    (preset.cols - 1) * 16 +
+                    48,
+                }}
+              >
+                <img
+                  className='device-logo'
+                  src='/logo-stream-deck-gif-splitter.png'
+                  alt='Stream Deck GIF Splitter'
+                />
+                <div
+                  className='device-screen'
+                  style={{
+                    gridTemplateColumns: `repeat(${preset.cols}, 1fr)`,
+                  }}
+                >
+                  {results.map((r) => (
+                    <div
+                      key={`${r.row}-${r.col}`}
+                      className='device-button'
+                    >
+                      <img
+                        key={tileSyncKey}
+                        src={r.url}
+                        alt={r.filename}
+                        onLoad={handleTileLoad}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </section>
         )}
         {/* FAQ */}
