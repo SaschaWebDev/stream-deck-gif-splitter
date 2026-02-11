@@ -72,7 +72,7 @@ function App() {
   } | null>(null);
   const [cutoffMode, setCutoffMode] = useState(false);
   const [cropSyncKey, setCropSyncKey] = useState(0);
-  const [tileSyncKey, setTileSyncKey] = useState(0);
+  const [tileSyncKey] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const tileLoadCount = useRef(0);
 

@@ -70,7 +70,8 @@ export function useFFmpeg() {
     await ffmpeg.deleteFile('crop_palette.png')
 
     const data = await ffmpeg.readFile('cropped.gif')
-    const blob = new Blob([data], { type: 'image/gif' })
+    const part: BlobPart = typeof data === 'string' ? data : new Uint8Array(data)
+    const blob = new Blob([part], { type: 'image/gif' })
     return URL.createObjectURL(blob)
   }, [ensureLoaded])
 
@@ -118,7 +119,8 @@ export function useFFmpeg() {
         ])
 
         const data = await ffmpeg.readFile(outName)
-        const blob = new Blob([data], { type: 'image/gif' })
+        const part: BlobPart = typeof data === 'string' ? data : new Uint8Array(data)
+        const blob = new Blob([part], { type: 'image/gif' })
         const url = URL.createObjectURL(blob)
 
         results.push({
