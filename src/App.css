@@ -403,6 +403,10 @@
 }
 
 /* Split Button */
+.split-button-wrapper {
+  margin-top: 1.5rem;
+}
+
 .split-button {
   width: 100%;
   padding: 0.6875rem 1.5rem;
@@ -419,8 +423,13 @@
 }
 
 .split-button:hover:not(:disabled) {
-  background: var(--accent-dim);
   box-shadow: 0 0 24px var(--accent-glow);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 24px var(--accent-glow); }
+  50% { box-shadow: 0 0 40px var(--accent-glow), 0 0 60px var(--accent-glow); }
 }
 
 .split-button:active:not(:disabled) {
@@ -446,12 +455,35 @@
   text-align: center;
 }
 
+.retry-button {
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.6875rem 1.5rem;
+  border-radius: 10px;
+  border: 1px solid var(--danger);
+  background: transparent;
+  color: var(--danger);
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.retry-button:hover:not(:disabled) {
+  background: rgba(255, 80, 80, 0.08);
+}
+
+.retry-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Results Section */
 .results-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 1.5rem;
   margin-bottom: 1rem;
 }
 
@@ -533,7 +565,7 @@
 
 .device-frame {
   position: relative;
-  max-width: 100%;
+  width: 100%;
   margin: 0 auto;
   padding: 24px;
   box-sizing: border-box;
@@ -724,20 +756,24 @@
   .results-header {
     flex-direction: column;
     gap: 0.75rem;
-    align-items: flex-start;
+    align-items: center;
   }
 
   .device-frame {
-    padding: 16px;
+    padding: 12px;
     border-radius: 14px;
   }
 
+  .device-screen {
+    gap: 6px;
+  }
+
   .device-logo {
-    margin-bottom: 12px;
+    margin-bottom: 8px;
   }
 
   .device-button {
-    border-radius: 7px;
+    border-radius: 5px;
   }
 
   .device-cable {
