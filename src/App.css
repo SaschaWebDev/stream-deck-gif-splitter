@@ -509,45 +509,53 @@
   cursor: not-allowed;
 }
 
-.results-grid {
-  display: grid;
-  gap: 1px;
-  background: var(--border);
-  border-radius: 12px;
-  overflow: hidden;
+/* Device Mockup */
+.device-mockup {
+  width: 100%;
+  overflow-x: auto;
   visibility: hidden;
   height: 0;
 }
 
-.results-grid.revealed {
+.device-mockup.revealed {
   visibility: visible;
   height: auto;
 }
 
-.result-tile {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background: var(--surface-solid);
-  overflow: hidden;
+.device-frame {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 24px;
+  background: linear-gradient(180deg, #1e1e22 0%, #161618 100%);
+  border-radius: 20px;
+  box-shadow:
+    0 2px 0 rgba(255, 255, 255, 0.04) inset,
+    0 12px 40px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
-.result-tile img {
+.device-screen {
+  display: grid;
+  gap: 6px;
+}
+
+.device-button {
+  width: 72px;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #000;
+  box-shadow:
+    inset 0 1px 3px rgba(0, 0, 0, 0.6),
+    0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.device-button img {
   width: 100%;
-  height: auto;
+  height: 100%;
   display: block;
-}
-
-.tile-label {
-  font-size: 0.625rem;
-  color: var(--text-tertiary);
-  padding: 0.3125rem 0.25rem;
-  text-align: center;
-  width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-family: inherit;
+  object-fit: cover;
 }
 
 /* FAQ Section */
@@ -699,5 +707,15 @@
     flex-direction: column;
     gap: 0.75rem;
     align-items: flex-start;
+  }
+
+  .device-frame {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .device-button {
+    width: 48px;
+    border-radius: 7px;
   }
 }

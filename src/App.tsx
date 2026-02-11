@@ -505,26 +505,29 @@ function App() {
                 {!tilesReady && (
                   <p className='status-text'>Loading tile previews...</p>
                 )}
-                <div
-                  className={`results-grid${tilesReady ? ' revealed' : ''}`}
-                  style={{
-                    gridTemplateColumns: `repeat(${preset.cols}, 1fr)`,
-                  }}
-                >
-                  {results.map((r) => (
+                <div className={`device-mockup${tilesReady ? ' revealed' : ''}`}>
+                  <div className='device-frame'>
                     <div
-                      key={`${r.row}-${r.col}`}
-                      className='result-tile'
-                      title={r.filename}
+                      className='device-screen'
+                      style={{
+                        gridTemplateColumns: `repeat(${preset.cols}, 1fr)`,
+                      }}
                     >
-                      <img
-                        key={tileSyncKey}
-                        src={r.url}
-                        alt={r.filename}
-                        onLoad={handleTileLoad}
-                      />
+                      {results.map((r) => (
+                        <div
+                          key={`${r.row}-${r.col}`}
+                          className='device-button'
+                        >
+                          <img
+                            key={tileSyncKey}
+                            src={r.url}
+                            alt={r.filename}
+                            onLoad={handleTileLoad}
+                          />
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  </div>
                 </div>
               </>
             )}
