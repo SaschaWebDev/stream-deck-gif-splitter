@@ -9,6 +9,7 @@ interface Preset {
   rows: number;
   tileWidth: number;
   tileHeight: number;
+  gap: number;
 }
 
 const PRESETS: Preset[] = [
@@ -18,6 +19,7 @@ const PRESETS: Preset[] = [
     rows: 3,
     tileWidth: 72,
     tileHeight: 72,
+    gap: 16,
   },
   {
     label: 'Stream Deck XL',
@@ -25,6 +27,7 @@ const PRESETS: Preset[] = [
     rows: 4,
     tileWidth: 144,
     tileHeight: 144,
+    gap: 40,
   },
   {
     label: 'Stream Deck Mini',
@@ -32,9 +35,24 @@ const PRESETS: Preset[] = [
     rows: 2,
     tileWidth: 72,
     tileHeight: 72,
+    gap: 16,
   },
-  { label: 'Stream Deck +', cols: 4, rows: 2, tileWidth: 72, tileHeight: 72 },
-  { label: 'Stream Deck Neo', cols: 4, rows: 2, tileWidth: 72, tileHeight: 72 },
+  {
+    label: 'Stream Deck +',
+    cols: 4,
+    rows: 2,
+    tileWidth: 72,
+    tileHeight: 72,
+    gap: 16,
+  },
+  {
+    label: 'Stream Deck Neo',
+    cols: 4,
+    rows: 2,
+    tileWidth: 72,
+    tileHeight: 72,
+    gap: 16,
+  },
 ];
 
 function App() {
@@ -52,6 +70,7 @@ function App() {
     w: number;
     h: number;
   } | null>(null);
+  const [cutoffMode, setCutoffMode] = useState(false);
   const [cropSyncKey, setCropSyncKey] = useState(0);
   const [tileSyncKey, setTileSyncKey] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -61,9 +80,17 @@ function App() {
     useFFmpeg();
 
   const preset = PRESETS[presetIndex];
-  const targetWidth = preset.cols * preset.tileWidth;
-  const targetHeight = preset.rows * preset.tileHeight;
+  const gap = cutoffMode ? preset.gap : 0;
+  const targetWidth =
+    preset.cols * preset.tileWidth +
+    (cutoffMode ? (preset.cols - 1) * preset.gap : 0);
+  const targetHeight =
+    preset.rows * preset.tileHeight +
+    (cutoffMode ? (preset.rows - 1) * preset.gap : 0);
   const previewTileSize = Math.min(preset.tileWidth, 72);
+  const scaledGap = cutoffMode
+    ? Math.round(preset.gap * (previewTileSize / preset.tileWidth))
+    : 16;
 
   const performCrop = useCallback(
     async (f: File, tw: number, th: number) => {
@@ -122,6 +149,7 @@ function App() {
   const handlePresetChange = useCallback(
     async (newIndex: number) => {
       setPresetIndex(newIndex);
+      setCutoffMode(false);
       const p = PRESETS[newIndex];
       const tw = p.cols * p.tileWidth;
       const th = p.rows * p.tileHeight;
@@ -139,6 +167,39 @@ function App() {
       }
     },
     [file, croppedPreview, results, cleanup, resetProgress, performCrop],
+  );
+
+  const handleCutoffToggle = useCallback(
+    async (checked: boolean) => {
+      setCutoffMode(checked);
+      const tw =
+        preset.cols * preset.tileWidth +
+        (checked ? (preset.cols - 1) * preset.gap : 0);
+      const th =
+        preset.rows * preset.tileHeight +
+        (checked ? (preset.rows - 1) * preset.gap : 0);
+
+      results.forEach((r) => URL.revokeObjectURL(r.url));
+      setResults([]);
+      setTilesReady(false);
+      resetProgress();
+
+      if (file) {
+        if (croppedPreview) URL.revokeObjectURL(croppedPreview);
+        setCroppedPreview(null);
+        await cleanup();
+        await performCrop(file, tw, th);
+      }
+    },
+    [
+      file,
+      croppedPreview,
+      results,
+      cleanup,
+      resetProgress,
+      performCrop,
+      preset,
+    ],
   );
 
   const clearFile = useCallback(async () => {
@@ -198,24 +259,16 @@ function App() {
         file.name,
         preset.cols,
         preset.rows,
-        targetWidth,
-        targetHeight,
+        preset.tileWidth,
+        preset.tileHeight,
+        gap,
       );
       setResults(splitResults);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to split GIF');
       resetProgress();
     }
-  }, [
-    file,
-    croppedPreview,
-    preset,
-    splitGif,
-    results,
-    targetWidth,
-    targetHeight,
-    resetProgress,
-  ]);
+  }, [file, croppedPreview, preset, splitGif, results, gap, resetProgress]);
 
   const handleTileLoad = useCallback(() => {
     tileLoadCount.current++;
@@ -231,7 +284,8 @@ function App() {
     try {
       const zip = new JSZip();
       const baseName = file.name.replace(/\.gif$/i, '');
-      const folderName = `${baseName}_${Date.now()}`;
+      const suffix = cutoffMode ? '_tile-cutoff' : '';
+      const folderName = `${baseName}${suffix}_${Date.now()}`;
       for (const r of results) {
         zip.file(`${folderName}/${r.filename}`, r.blob);
       }
@@ -245,7 +299,7 @@ function App() {
     } finally {
       setZipping(false);
     }
-  }, [results, file]);
+  }, [results, file, cutoffMode]);
 
   const formatSize = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`;
@@ -377,11 +431,25 @@ function App() {
                 <div className='config-details'>
                   <span>
                     {targetWidth}px &times; {targetHeight}px canvas
+                    {cutoffMode && ` (${preset.gap}px gap)`}
                   </span>
                   <span>
                     {preset.cols} &times; {preset.rows} grid &mdash;{' '}
                     {preset.cols * preset.rows} tiles at {preset.tileWidth}px
                     &times;{preset.tileHeight}px
+                  </span>
+                </div>
+                <div className='cutoff-toggle'>
+                  <input
+                    type='checkbox'
+                    id='cutoff-mode'
+                    checked={cutoffMode}
+                    onChange={(e) => handleCutoffToggle(e.target.checked)}
+                    disabled={isCropping || isSplitting}
+                  />
+                  <label htmlFor='cutoff-mode'>Cutoff Mode</label>
+                  <span className='cutoff-description'>
+                    Space between buttons will be cutoff from image.
                   </span>
                 </div>
               </div>
@@ -395,7 +463,7 @@ function App() {
               {originalSize
                 ? ` (${originalSize.w}px \u00d7 ${originalSize.h}px)`
                 : ''}{' '}
-              will be auto-cropped to {targetWidth} &times; {targetHeight}px
+              will be auto-cropped to {targetWidth}px &times; {targetHeight}px
               (center crop). Review the result before splitting.
             </p>
             <div className='crop-compare'>
@@ -490,9 +558,7 @@ function App() {
             {!tilesReady && (
               <p className='status-text'>Loading tile previews...</p>
             )}
-            <div
-              className={`device-mockup${tilesReady ? ' revealed' : ''}`}
-            >
+            <div className={`device-mockup${tilesReady ? ' revealed' : ''}`}>
               <div className='device-cable'>
                 <div className='device-cable-plug' />
               </div>
@@ -501,7 +567,7 @@ function App() {
                 style={{
                   maxWidth:
                     preset.cols * previewTileSize +
-                    (preset.cols - 1) * 16 +
+                    (preset.cols - 1) * scaledGap +
                     48,
                 }}
               >
@@ -514,13 +580,11 @@ function App() {
                   className='device-screen'
                   style={{
                     gridTemplateColumns: `repeat(${preset.cols}, 1fr)`,
+                    gap: `${scaledGap}px`,
                   }}
                 >
                   {results.map((r) => (
-                    <div
-                      key={`${r.row}-${r.col}`}
-                      className='device-button'
-                    >
+                    <div key={`${r.row}-${r.col}`} className='device-button'>
                       <img
                         key={tileSyncKey}
                         src={r.url}
