@@ -523,7 +523,6 @@ function App() {
                         alt={r.filename}
                         onLoad={handleTileLoad}
                       />
-                      <span className='tile-label'>{r.filename}</span>
                     </div>
                   ))}
                 </div>
