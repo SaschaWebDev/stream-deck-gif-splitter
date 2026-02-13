@@ -558,6 +558,11 @@
   cursor: not-allowed;
 }
 
+.download-profile-button {
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+
 /* Device Mockup */
 .device-mockup {
   width: 100%;
@@ -789,6 +794,11 @@
     flex-direction: column;
     gap: 0.75rem;
     align-items: center;
+  }
+
+  .results-actions {
+    flex-wrap: wrap;
+    justify-content: center;
   }
 
   .device-frame {
