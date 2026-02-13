@@ -1,10 +1,12 @@
 import { useState, useRef, useCallback } from 'react';
 import JSZip from 'jszip';
 import { useFFmpeg, type SplitResult } from './useFFmpeg';
+import { generateStreamDeckProfile } from './streamDeckProfile';
 import './App.css';
 
 interface Preset {
   label: string;
+  model: string;
   cols: number;
   rows: number;
   tileWidth: number;
@@ -15,6 +17,7 @@ interface Preset {
 const PRESETS: Preset[] = [
   {
     label: 'Stream Deck MK.2',
+    model: '20GBA9901',
     cols: 5,
     rows: 3,
     tileWidth: 72,
@@ -23,6 +26,7 @@ const PRESETS: Preset[] = [
   },
   {
     label: 'Stream Deck XL',
+    model: '20GAT9902',
     cols: 8,
     rows: 4,
     tileWidth: 144,
@@ -31,6 +35,7 @@ const PRESETS: Preset[] = [
   },
   {
     label: 'Stream Deck Mini',
+    model: '20GAI9902',
     cols: 3,
     rows: 2,
     tileWidth: 72,
@@ -39,6 +44,7 @@ const PRESETS: Preset[] = [
   },
   {
     label: 'Stream Deck +',
+    model: '20GBD9901',
     cols: 4,
     rows: 2,
     tileWidth: 72,
@@ -47,6 +53,7 @@ const PRESETS: Preset[] = [
   },
   {
     label: 'Stream Deck Neo',
+    model: '20GBJ9901',
     cols: 4,
     rows: 2,
     tileWidth: 72,
@@ -66,6 +73,7 @@ function App() {
   const [tilesReady, setTilesReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [zipping, setZipping] = useState(false);
+  const [zippingProfile, setZippingProfile] = useState(false);
   const [originalSize, setOriginalSize] = useState<{
     w: number;
     h: number;
@@ -300,6 +308,31 @@ function App() {
       setZipping(false);
     }
   }, [results, file, cutoffMode]);
+
+  const downloadProfile = useCallback(async () => {
+    if (results.length === 0 || !file) return;
+    setZippingProfile(true);
+
+    try {
+      const baseName = file.name.replace(/\.gif$/i, '');
+      const deviceName = preset.label.replace(/\s+/g, '-');
+      const timestamp = Math.floor(Date.now() / 1000);
+      const suffix = `_${deviceName}_${timestamp}`;
+      const extension = '.streamDeckProfile';
+      // Truncate baseName so total filename stays well under 180 chars
+      const maxBase = 180 - suffix.length - extension.length;
+      const safeName = baseName.substring(0, maxBase);
+      const blob = await generateStreamDeckProfile(results, baseName, preset.model);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${safeName}${suffix}${extension}`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setZippingProfile(false);
+    }
+  }, [results, file, preset.model]);
 
   const formatSize = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`;
@@ -552,6 +585,15 @@ function App() {
                   {zipping
                     ? 'Creating zip...'
                     : `Download .zip (${results.length} tiles)`}
+                </button>
+                <button
+                  className='download-all-button download-profile-button'
+                  onClick={downloadProfile}
+                  disabled={zippingProfile}
+                >
+                  {zippingProfile
+                    ? 'Creating profile...'
+                    : 'Download .streamDeckProfile'}
                 </button>
               </div>
             </div>
