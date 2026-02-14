@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useGifSplitter } from '../shared/useGifSplitter';
 import { PRESETS } from '../shared/presets';
 import './Design5Hardware.css';
@@ -12,14 +13,14 @@ function Design5Hardware() {
     presetIndex,
     preset,
     results,
-    tilesReady,
+    tilesReady: _tilesReady,
     error,
     zipping,
     zippingProfile,
     originalSize,
     cutoffMode,
     cropSyncKey,
-    tileSyncKey,
+    tileSyncKey: _tileSyncKey,
     fileInputRef,
     loading,
     progress: _progress,
@@ -39,11 +40,131 @@ function Design5Hardware() {
     handleDrop,
     handleInputChange,
     handleSplit,
-    handleTileLoad,
+    handleTileLoad: _handleTileLoad,
     downloadZip,
     downloadProfile,
     formatSize,
   } = useGifSplitter();
+
+  // Sync both GIF previews so they start their animation loop at the exact same frame
+  const [syncedSrcs, setSyncedSrcs] = useState<{ orig: string; crop: string } | null>(null);
+  const origRef = useRef<HTMLImageElement>(null);
+  const cropRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    // Reset when cropping starts or sources change
+    setSyncedSrcs(null);
+
+    if (!preview || !croppedPreview || isCropping) return;
+
+    let cancelled = false;
+
+    // Preload both GIFs completely off-screen
+    const imgA = new Image();
+    const imgB = new Image();
+    let loadedCount = 0;
+
+    const onBothReady = () => {
+      loadedCount++;
+      if (loadedCount < 2 || cancelled) return;
+
+      // Both are fully decoded in memory. Now create fresh blob URLs
+      // so the browser starts the GIF animation from frame 0 when we set src.
+      // We re-fetch the blobs to get fresh URLs that haven't started animating.
+      const freshOrig = preview + '#t=' + Date.now();
+      const freshCrop = croppedPreview + '#t=' + Date.now();
+
+      // Use rAF to ensure both srcs are painted in the same frame
+      requestAnimationFrame(() => {
+        if (cancelled) return;
+        setSyncedSrcs({ orig: freshOrig, crop: freshCrop });
+      });
+    };
+
+    imgA.onload = onBothReady;
+    imgB.onload = onBothReady;
+    imgA.src = preview;
+    imgB.src = croppedPreview;
+
+    return () => { cancelled = true; };
+  }, [preview, croppedPreview, isCropping, cropSyncKey]);
+
+  // Sync all result tile GIFs: preload off-screen, wait for viewport, reveal all at once
+  const mockupRef = useRef<HTMLDivElement>(null);
+  const [tileSyncedUrls, setTileSyncedUrls] = useState<Map<string, string> | null>(null);
+  const [allTilesPreloaded, setAllTilesPreloaded] = useState(false);
+  const [tilesInView, setTilesInView] = useState(false);
+  const tileLoadCountRef = useRef(0);
+
+  // Reset tile sync state when results change
+  useEffect(() => {
+    tileLoadCountRef.current = 0;
+    setAllTilesPreloaded(false);
+    setTilesInView(false);
+    setTileSyncedUrls(null);
+  }, [results]);
+
+  // Hidden preload: count each tile as it loads
+  const onHiddenTileLoad = useCallback(() => {
+    tileLoadCountRef.current++;
+    if (tileLoadCountRef.current >= results.length && results.length > 0) {
+      setAllTilesPreloaded(true);
+    }
+  }, [results.length]);
+
+  // IntersectionObserver: detect when mockup area is visible (start observing once tiles are preloaded)
+  useEffect(() => {
+    if (!allTilesPreloaded || results.length === 0) return;
+    const el = mockupRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setTilesInView(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [allTilesPreloaded, results]);
+
+  // When in view + preloaded: create fresh URLs for all tiles in one paint frame
+  useEffect(() => {
+    if (!tilesInView || !allTilesPreloaded || results.length === 0) return;
+    let cancelled = false;
+
+    // Re-preload with fresh cache-bust URLs so GIF animations restart from frame 0
+    let loadedCount = 0;
+    const total = results.length;
+    const stamp = Date.now();
+
+    const onAllReady = () => {
+      loadedCount++;
+      if (loadedCount < total || cancelled) return;
+      requestAnimationFrame(() => {
+        if (cancelled) return;
+        const urls = new Map<string, string>();
+        for (const r of results) {
+          urls.set(`${r.row}-${r.col}`, r.url + '#sync=' + stamp);
+        }
+        setTileSyncedUrls(urls);
+      });
+    };
+
+    for (const r of results) {
+      const img = new Image();
+      img.onload = onAllReady;
+      img.onerror = onAllReady;
+      img.src = r.url + '#sync=' + stamp;
+    }
+
+    return () => { cancelled = true; };
+  }, [tilesInView, allTilesPreloaded, results]);
+
+  const mockupVisible = tileSyncedUrls !== null;
 
   return (
     <div className='hw-page'>
@@ -233,13 +354,18 @@ function Design5Hardware() {
                 <div className='hw-crop-card'>
                   <span className='hw-crop-label'>ORIGINAL</span>
                   <div className='hw-crop-viewport'>
-                    {preview && (
+                    {syncedSrcs ? (
                       <img
+                        ref={origRef}
                         key={`orig-${cropSyncKey}`}
-                        src={preview}
+                        src={syncedSrcs.orig}
                         alt='Original'
                       />
-                    )}
+                    ) : preview ? (
+                      <div className='hw-crop-loading'>
+                        {isCropping ? (loading ? 'Loading ffmpeg...' : 'Cropping...') : 'Syncing...'}
+                      </div>
+                    ) : null}
                   </div>
                 </div>
 
@@ -266,20 +392,23 @@ function Design5Hardware() {
                     {targetWidth} &times; {targetHeight}
                   </span>
                   <div className='hw-crop-viewport'>
-                    {isCropping ? (
+                    {syncedSrcs ? (
+                      <img
+                        ref={cropRef}
+                        key={`crop-${cropSyncKey}`}
+                        src={syncedSrcs.crop}
+                        alt='Cropped'
+                      />
+                    ) : isCropping ? (
                       <div className='hw-crop-loading'>
                         {loading ? 'Loading ffmpeg...' : 'Cropping...'}
                       </div>
-                    ) : croppedPreview ? (
-                      <img
-                        key={`crop-${cropSyncKey}`}
-                        src={croppedPreview}
-                        alt='Cropped'
-                      />
                     ) : error ? (
                       <div className='hw-crop-loading hw-crop-error'>
                         {error}
                       </div>
+                    ) : croppedPreview ? (
+                      <div className='hw-crop-loading'>Syncing...</div>
                     ) : null}
                   </div>
                 </div>
@@ -346,12 +475,29 @@ function Design5Hardware() {
                 </div>
               </div>
 
-              {!tilesReady && (
-                <p className='hw-loading-tiles'>Loading tile previews...</p>
+              {!mockupVisible && (
+                <p className='hw-loading-tiles'>
+                  {!allTilesPreloaded ? 'Loading tile previews...' : 'Scroll down to reveal...'}
+                </p>
+              )}
+
+              {/* Hidden preload: load all tile GIFs off-screen to trigger tilesReady */}
+              {results.length > 0 && !allTilesPreloaded && (
+                <div style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden', opacity: 0 }}>
+                  {results.map((r) => (
+                    <img
+                      key={`preload-${r.row}-${r.col}`}
+                      src={r.url}
+                      onLoad={onHiddenTileLoad}
+                      alt=''
+                    />
+                  ))}
+                </div>
               )}
 
               <div
-                className={`hw-mockup-area${tilesReady ? ' hw-revealed' : ''}`}
+                ref={mockupRef}
+                className={`hw-mockup-area${mockupVisible ? ' hw-revealed' : ''}`}
               >
                 <div className='hw-device-cable'>
                   <div className='hw-device-cable-plug' />
@@ -379,16 +525,19 @@ function Design5Hardware() {
                       gap: `${scaledGap}px`,
                     }}
                   >
-                    {results.map((r) => (
-                      <div key={`${r.row}-${r.col}`} className='hw-tile-button'>
-                        <img
-                          key={tileSyncKey}
-                          src={r.url}
-                          alt={r.filename}
-                          onLoad={handleTileLoad}
-                        />
-                      </div>
-                    ))}
+                    {results.map((r) => {
+                      const syncUrl = tileSyncedUrls?.get(`${r.row}-${r.col}`);
+                      return (
+                        <div key={`${r.row}-${r.col}`} className='hw-tile-button'>
+                          {syncUrl && (
+                            <img
+                              src={syncUrl}
+                              alt={r.filename}
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
