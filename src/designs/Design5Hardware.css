@@ -32,34 +32,20 @@
       transparent 1px,
       transparent 4px
     );
-  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family:
+    'DM Sans',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
   color: #d4d4d8;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px 20px;
+  padding: 40px 20px 80px;
   position: relative;
   perspective: 1200px;
 }
-
-/* ---- Rubber feet in corners ---- */
-.hw-rubber-foot {
-  position: fixed;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 40% 35%, #333338, #1a1a1e);
-  box-shadow:
-    0 0 0 2px #222226,
-    inset 0 1px 2px rgba(255, 255, 255, 0.06),
-    0 2px 6px rgba(0, 0, 0, 0.6);
-  z-index: 100;
-}
-
-.hw-foot-tl { top: 16px; left: 16px; }
-.hw-foot-tr { top: 16px; right: 16px; }
-.hw-foot-bl { bottom: 16px; left: 16px; }
-.hw-foot-br { bottom: 16px; right: 16px; }
 
 /* ---- Device bezel (outer frame) ---- */
 .hw-device-bezel {
@@ -248,6 +234,17 @@
 .hw-hero-panel {
   text-align: center;
   padding: 40px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hw-hero-logo {
+  width: 480px;
+  max-width: 70%;
+  height: auto;
+  margin-bottom: 20px;
+  filter: drop-shadow(0 4px 20px rgba(0, 0, 0, 0.6));
 }
 
 .hw-title {
@@ -264,10 +261,15 @@
 }
 
 .hw-title-accent {
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #e4e4e7;
+  position: relative;
+  display: inline-block;
+  text-shadow:
+    0 0 20px rgba(59, 130, 246, 0.4),
+    0 0 40px rgba(59, 130, 246, 0.15),
+    0 2px 4px rgba(0, 0, 0, 0.5);
+  border-bottom: 2px solid #3b82f6;
+  padding-bottom: 2px;
 }
 
 .hw-subtitle {
@@ -295,8 +297,7 @@
   justify-content: center;
   transition: all 0.15s ease;
   /* 3D raised button */
-  background:
-    linear-gradient(180deg, #1e1e24 0%, #18181c 100%);
+  background: linear-gradient(180deg, #1e1e24 0%, #18181c 100%);
   border: 2px solid #2a2a30;
   box-shadow:
     0 6px 0 0 #111114,
@@ -431,8 +432,7 @@
   letter-spacing: 2px;
   text-transform: uppercase;
   color: #ef4444;
-  background:
-    linear-gradient(180deg, #1e1e24, #1a1a1e);
+  background: linear-gradient(180deg, #1e1e24, #1a1a1e);
   border: 1px solid #3f3f46;
   border-radius: 6px;
   padding: 8px 16px;
@@ -455,8 +455,7 @@
 }
 
 .hw-file-remove:active {
-  box-shadow:
-    inset 0 2px 4px rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
   transform: translateY(3px);
 }
 
@@ -490,8 +489,7 @@
   font-size: 0.85rem;
   font-weight: 500;
   color: #e4e4e7;
-  background:
-    linear-gradient(180deg, #1e1e24, #18181c);
+  background: linear-gradient(180deg, #1e1e24, #18181c);
   border: 1px solid #3f3f46;
   border-radius: 8px;
   padding: 10px 36px 10px 14px;
@@ -525,11 +523,19 @@
   cursor: not-allowed;
 }
 
+.hw-select option {
+  background: #1e1e24;
+  color: #e4e4e7;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  padding: 8px 14px;
+}
+
 .hw-config-specs {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding-top: 4px;
+  padding-top: 22px;
 }
 
 .hw-spec {
@@ -544,7 +550,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-left: auto;
+  /* margin-left: auto; */
 }
 
 .hw-toggle-wrapper {
@@ -624,8 +630,12 @@
 .hw-divider {
   height: 1px;
   margin: 20px 0;
-  background:
-    linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.06),
+    transparent
+  );
 }
 
 /* ---- Crop preview ---- */
@@ -725,8 +735,7 @@
   letter-spacing: 2px;
   text-transform: uppercase;
   color: #fff;
-  background:
-    linear-gradient(180deg, #2563eb, #1d4ed8);
+  background: linear-gradient(180deg, #2563eb, #1d4ed8);
   border: 2px solid #3b82f6;
   border-radius: 14px;
   padding: 16px 48px;
@@ -765,8 +774,7 @@
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.75rem;
   color: #fbbf24;
-  background:
-    linear-gradient(180deg, #1e1e24, #18181c);
+  background: linear-gradient(180deg, #1e1e24, #18181c);
   border: 1px solid #3f3f46;
   border-radius: 8px;
   padding: 10px 20px;
@@ -818,8 +826,7 @@
   font-size: 0.75rem;
   font-weight: 600;
   color: #e4e4e7;
-  background:
-    linear-gradient(180deg, #27272a, #1e1e22);
+  background: linear-gradient(180deg, #27272a, #1e1e22);
   border: 1px solid #3f3f46;
   border-radius: 8px;
   padding: 10px 18px;
@@ -870,13 +877,44 @@
   margin-bottom: 12px;
 }
 
+/* ---- Device cable ---- */
+.hw-device-cable {
+  width: 3px;
+  height: 50px;
+  margin: 0 auto;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    #222225 40%,
+    #2a2a2e 100%
+  );
+  border-radius: 2px;
+  position: relative;
+}
+
+.hw-device-cable-plug {
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 9px;
+  height: 6px;
+  background: #2a2a2e;
+  border-radius: 1px 1px 2px 2px;
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.3);
+}
+
 /* ---- Mockup area ---- */
 .hw-mockup-area {
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
   opacity: 0;
   transform: scale(0.96);
-  transition: opacity 0.4s ease, transform 0.4s ease;
+  transition:
+    opacity 0.4s ease,
+    transform 0.4s ease;
 }
 
 .hw-mockup-area.hw-revealed {
@@ -909,8 +947,7 @@
 }
 
 .hw-mockup-logo {
-  height: 20px;
-  opacity: 0.5;
+  height: 40px;
 }
 
 .hw-mockup-grid {
@@ -1041,6 +1078,8 @@
     ),
     linear-gradient(180deg, #28282e, #222228);
   border-top: 1px solid rgba(0, 0, 0, 0.4);
+  margin: 0 -6px -6px -6px;
+  width: calc(100% + 12px);
 }
 
 .hw-usb-area {
@@ -1079,6 +1118,7 @@
   letter-spacing: 3px;
   text-transform: uppercase;
   color: #3f3f46;
+  margin-left: 4px;
   /* Debossed */
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.02);
 }
@@ -1109,6 +1149,10 @@
    ============================================================ */
 
 @media (max-width: 768px) {
+  .hw-crop-desc-br {
+    display: none;
+  }
+
   .hw-page {
     padding: 20px 10px;
   }
@@ -1123,6 +1167,10 @@
     border-radius: 16px 16px 0 0;
     flex-wrap: wrap;
     gap: 8px;
+  }
+
+  .hw-config-specs {
+    padding-top: 0px;
   }
 
   .hw-brand {
@@ -1145,6 +1193,11 @@
 
   .hw-hero-panel {
     padding: 24px 14px;
+  }
+
+  .hw-hero-logo {
+    width: 420px;
+    margin-bottom: 16px;
   }
 
   .hw-title {
@@ -1187,6 +1240,10 @@
     font-size: 0.85rem;
   }
 
+  .hw-device-badge {
+    display: none;
+  }
+
   .hw-results-bar {
     flex-direction: column;
     align-items: flex-start;
@@ -1217,10 +1274,8 @@
   .hw-bottom-bezel {
     border-radius: 0 0 16px 16px;
     padding: 16px;
-  }
-
-  .hw-rubber-foot {
-    display: none;
+    margin: 0 -3px -3px -3px;
+    width: calc(100% + 6px);
   }
 
   .hw-faq-item summary {
@@ -1275,6 +1330,8 @@
   .hw-bottom-bezel {
     border-radius: 0 0 12px 12px;
     padding: 12px;
+    margin: 0 -4px -4px -4px;
+    width: calc(100% + 8px);
   }
 
   .hw-download-button {
@@ -1290,8 +1347,13 @@
 
 /* ---- Animations ---- */
 @keyframes hw-led-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
 }
 
 .hw-led-green {

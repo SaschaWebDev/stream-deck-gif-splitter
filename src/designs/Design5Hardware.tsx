@@ -47,12 +47,6 @@ function Design5Hardware() {
 
   return (
     <div className='hw-page'>
-      {/* Rubber feet in corners */}
-      <div className='hw-rubber-foot hw-foot-tl' />
-      <div className='hw-rubber-foot hw-foot-tr' />
-      <div className='hw-rubber-foot hw-foot-bl' />
-      <div className='hw-rubber-foot hw-foot-br' />
-
       {/* Device bezel / outer frame */}
       <div className='hw-device-bezel'>
         {/* Top bezel bar with branding */}
@@ -74,9 +68,14 @@ function Design5Hardware() {
         <main className='hw-lcd-screen'>
           {/* Hero section */}
           <section className='hw-screen-panel hw-hero-panel'>
+            <img
+              className='hw-hero-logo'
+              src='/steam-deck-gif-splitter-logo-big.png'
+              alt='Stream Deck GIF Splitter'
+            />
             <h1 className='hw-title'>
-              Split animated GIFs for your{' '}
-              <span className='hw-title-accent'>Stream Deck</span>
+              Split animated GIFs for
+              <br /> your <span className='hw-title-accent'>Stream Deck</span>
             </h1>
             <p className='hw-subtitle'>
               Drop a GIF file below to split it into a grid of animated tiles,
@@ -227,7 +226,7 @@ function Design5Hardware() {
                   ? ` (${originalSize.w}px \u00d7 ${originalSize.h}px)`
                   : ''}{' '}
                 will be auto-cropped to {targetWidth}px &times; {targetHeight}px
-                (center crop). Review the result before splitting.
+                (center crop). <span className='hw-crop-desc-br'><br /></span> Review the result before splitting.
               </p>
 
               <div className='hw-crop-compare'>
@@ -354,6 +353,9 @@ function Design5Hardware() {
               <div
                 className={`hw-mockup-area${tilesReady ? ' hw-revealed' : ''}`}
               >
+                <div className='hw-device-cable'>
+                  <div className='hw-device-cable-plug' />
+                </div>
                 <div
                   className='hw-mockup-frame'
                   style={{
@@ -437,6 +439,17 @@ function Design5Hardware() {
                     this video
                   </a>{' '}
                   for a quick tutorial.
+                </p>
+              </details>
+              <details className='hw-faq-item'>
+                <summary>How do I set up a .streamDeckProfile?</summary>
+                <p>
+                  Simply download the .streamDeckProfile file and open it. The
+                  Stream Deck software will automatically detect it and prompt
+                  you to install it. This creates a separate profile alongside
+                  your existing ones, so you can use it as a starting point for
+                  a new setup or just preview how the animated background looks
+                  on your device.
                 </p>
               </details>
               <details className='hw-faq-item'>
