@@ -17,7 +17,7 @@ export function useGifSplitter() {
   const [zipping, setZipping] = useState(false);
   const [zippingProfile, setZippingProfile] = useState(false);
   const [originalSize, setOriginalSize] = useState<{ w: number; h: number } | null>(null);
-  const [cutoffMode, setCutoffMode] = useState(false);
+  const [cutoffMode, setCutoffMode] = useState(true);
   const [cropSyncKey, setCropSyncKey] = useState(0);
   const [tileSyncKey] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -72,10 +72,10 @@ export function useGifSplitter() {
 
   const handlePresetChange = useCallback(async (newIndex: number) => {
     setPresetIndex(newIndex);
-    setCutoffMode(false);
+    setCutoffMode(true);
     const p = PRESETS[newIndex];
-    const tw = p.cols * p.tileWidth;
-    const th = p.rows * p.tileHeight;
+    const tw = p.cols * p.tileWidth + (p.cols - 1) * p.gap;
+    const th = p.rows * p.tileHeight + (p.rows - 1) * p.gap;
 
     results.forEach((r) => URL.revokeObjectURL(r.url));
     setResults([]);
