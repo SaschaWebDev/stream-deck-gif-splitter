@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useGifSplitter } from '../shared/useGifSplitter';
 import { PRESETS } from '../shared/presets';
 import './Design5Hardware.css';
@@ -13,14 +13,14 @@ function Design5Hardware() {
     presetIndex,
     preset,
     results,
-    tilesReady: _tilesReady,
+    tilesReady,
     error,
     zipping,
     zippingProfile,
     originalSize,
     cutoffMode,
     cropSyncKey,
-    tileSyncKey: _tileSyncKey,
+    tileSyncKey,
     fileInputRef,
     loading,
     progress: _progress,
@@ -40,7 +40,7 @@ function Design5Hardware() {
     handleDrop,
     handleInputChange,
     handleSplit,
-    handleTileLoad: _handleTileLoad,
+    handleTileLoad,
     downloadZip,
     downloadProfile,
     formatSize,
@@ -89,82 +89,14 @@ function Design5Hardware() {
     return () => { cancelled = true; };
   }, [preview, croppedPreview, isCropping, cropSyncKey]);
 
-  // Sync all result tile GIFs: preload off-screen, wait for viewport, reveal all at once
-  const mockupRef = useRef<HTMLDivElement>(null);
-  const [tileSyncedUrls, setTileSyncedUrls] = useState<Map<string, string> | null>(null);
-  const [allTilesPreloaded, setAllTilesPreloaded] = useState(false);
-  const [tilesInView, setTilesInView] = useState(false);
-  const tileLoadCountRef = useRef(0);
+  const resultsRef = useRef<HTMLDivElement>(null);
 
-  // Reset tile sync state when results change
+  // Auto-scroll to results area when splitting starts
   useEffect(() => {
-    tileLoadCountRef.current = 0;
-    setAllTilesPreloaded(false);
-    setTilesInView(false);
-    setTileSyncedUrls(null);
-  }, [results]);
-
-  // Hidden preload: count each tile as it loads
-  const onHiddenTileLoad = useCallback(() => {
-    tileLoadCountRef.current++;
-    if (tileLoadCountRef.current >= results.length && results.length > 0) {
-      setAllTilesPreloaded(true);
+    if (isSplitting && resultsRef.current) {
+      resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
-  }, [results.length]);
-
-  // IntersectionObserver: detect when mockup area is visible (start observing once tiles are preloaded)
-  useEffect(() => {
-    if (!allTilesPreloaded || results.length === 0) return;
-    const el = mockupRef.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setTilesInView(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.1 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [allTilesPreloaded, results]);
-
-  // When in view + preloaded: create fresh URLs for all tiles in one paint frame
-  useEffect(() => {
-    if (!tilesInView || !allTilesPreloaded || results.length === 0) return;
-    let cancelled = false;
-
-    // Re-preload with fresh cache-bust URLs so GIF animations restart from frame 0
-    let loadedCount = 0;
-    const total = results.length;
-    const stamp = Date.now();
-
-    const onAllReady = () => {
-      loadedCount++;
-      if (loadedCount < total || cancelled) return;
-      requestAnimationFrame(() => {
-        if (cancelled) return;
-        const urls = new Map<string, string>();
-        for (const r of results) {
-          urls.set(`${r.row}-${r.col}`, r.url + '#sync=' + stamp);
-        }
-        setTileSyncedUrls(urls);
-      });
-    };
-
-    for (const r of results) {
-      const img = new Image();
-      img.onload = onAllReady;
-      img.onerror = onAllReady;
-      img.src = r.url + '#sync=' + stamp;
-    }
-
-    return () => { cancelled = true; };
-  }, [tilesInView, allTilesPreloaded, results]);
-
-  const mockupVisible = tileSyncedUrls !== null;
+  }, [isSplitting]);
 
   return (
     <div className='hw-page'>
@@ -362,8 +294,13 @@ function Design5Hardware() {
                         alt='Original'
                       />
                     ) : preview ? (
-                      <div className='hw-crop-loading'>
-                        {isCropping ? (loading ? 'Loading ffmpeg...' : 'Cropping...') : 'Syncing...'}
+                      <div className='hw-crop-loading hw-crop-active'>
+                        {isCropping ? (loading ? 'Loading ffmpeg' : 'Cropping') : 'Syncing'}
+                        <span className='hw-bounce-dots'>
+                          <span className='hw-dot'>.</span>
+                          <span className='hw-dot'>.</span>
+                          <span className='hw-dot'>.</span>
+                        </span>
                       </div>
                     ) : null}
                   </div>
@@ -400,15 +337,27 @@ function Design5Hardware() {
                         alt='Cropped'
                       />
                     ) : isCropping ? (
-                      <div className='hw-crop-loading'>
-                        {loading ? 'Loading ffmpeg...' : 'Cropping...'}
+                      <div className='hw-crop-loading hw-crop-active'>
+                        {loading ? 'Loading ffmpeg' : 'Cropping'}
+                        <span className='hw-bounce-dots'>
+                          <span className='hw-dot'>.</span>
+                          <span className='hw-dot'>.</span>
+                          <span className='hw-dot'>.</span>
+                        </span>
                       </div>
                     ) : error ? (
                       <div className='hw-crop-loading hw-crop-error'>
                         {error}
                       </div>
                     ) : croppedPreview ? (
-                      <div className='hw-crop-loading'>Syncing...</div>
+                      <div className='hw-crop-loading hw-crop-active'>
+                        Syncing
+                        <span className='hw-bounce-dots'>
+                          <span className='hw-dot'>.</span>
+                          <span className='hw-dot'>.</span>
+                          <span className='hw-dot'>.</span>
+                        </span>
+                      </div>
                     ) : null}
                   </div>
                 </div>
@@ -443,106 +392,94 @@ function Design5Hardware() {
             </section>
           )}
 
-          {/* Results */}
-          {file && croppedPreview && results.length > 0 && (
-            <section className='hw-screen-panel hw-results-panel'>
-              <div className='hw-panel-header'>
-                <div className='hw-led hw-led-green' />
-                <h2 className='hw-panel-title'>OUTPUT</h2>
-              </div>
-
-              <div className='hw-results-bar'>
-                <span className='hw-device-badge'>{preset.label}</span>
-                <div className='hw-results-buttons'>
-                  <button
-                    className='hw-download-button'
-                    onClick={downloadZip}
-                    disabled={zipping}
-                  >
-                    {zipping
-                      ? 'Creating zip...'
-                      : `Download .zip (${results.length} tiles)`}
-                  </button>
-                  <button
-                    className='hw-download-button hw-download-profile'
-                    onClick={downloadProfile}
-                    disabled={zippingProfile}
-                  >
-                    {zippingProfile
-                      ? 'Creating profile...'
-                      : 'Download .streamDeckProfile'}
-                  </button>
+          {/* Results - always in DOM as scroll target */}
+          <div ref={resultsRef}>
+            {file && croppedPreview && (isSplitting || results.length > 0) && (
+              <section className='hw-screen-panel hw-results-panel'>
+                <div className='hw-panel-header'>
+                  <div className='hw-led hw-led-green' />
+                  <h2 className='hw-panel-title'>OUTPUT</h2>
                 </div>
-              </div>
 
-              {!mockupVisible && (
-                <p className='hw-loading-tiles'>
-                  {!allTilesPreloaded ? 'Loading tile previews...' : 'Scroll down to reveal...'}
-                </p>
-              )}
+                {results.length > 0 && (
+                  <div className='hw-results-bar'>
+                    <span className='hw-device-badge'>{preset.label}</span>
+                    <div className='hw-results-buttons'>
+                      <button
+                        className='hw-download-button'
+                        onClick={downloadZip}
+                        disabled={zipping}
+                      >
+                        {zipping
+                          ? 'Creating zip...'
+                          : `Download .zip (${results.length} tiles)`}
+                      </button>
+                      <button
+                        className='hw-download-button hw-download-profile'
+                        onClick={downloadProfile}
+                        disabled={zippingProfile}
+                      >
+                        {zippingProfile
+                          ? 'Creating profile...'
+                          : 'Download .streamDeckProfile'}
+                      </button>
+                    </div>
+                  </div>
+                )}
 
-              {/* Hidden preload: load all tile GIFs off-screen to trigger tilesReady */}
-              {results.length > 0 && !allTilesPreloaded && (
-                <div style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden', opacity: 0 }}>
-                  {results.map((r) => (
-                    <img
-                      key={`preload-${r.row}-${r.col}`}
-                      src={r.url}
-                      onLoad={onHiddenTileLoad}
-                      alt=''
-                    />
-                  ))}
-                </div>
-              )}
+                {!isSplitting && results.length > 0 && !tilesReady && (
+                  <p className='hw-loading-tiles'>Loading tile previews...</p>
+                )}
 
-              <div
-                ref={mockupRef}
-                className={`hw-mockup-area${mockupVisible ? ' hw-revealed' : ''}`}
-              >
-                <div className='hw-device-cable'>
-                  <div className='hw-device-cable-plug' />
-                </div>
                 <div
-                  className='hw-mockup-frame'
-                  style={{
-                    maxWidth:
-                      preset.cols * previewTileSize +
-                      (preset.cols - 1) * scaledGap +
-                      48,
-                  }}
+                  className={`hw-mockup-area${tilesReady ? ' hw-revealed' : ''}`}
                 >
-                  <div className='hw-mockup-logo-bar'>
-                    <img
-                      className='hw-mockup-logo'
-                      src='/logo-stream-deck-gif-splitter.png'
-                      alt='Stream Deck GIF Splitter'
-                    />
-                  </div>
-                  <div
-                    className='hw-mockup-grid'
-                    style={{
-                      gridTemplateColumns: `repeat(${preset.cols}, 1fr)`,
-                      gap: `${scaledGap}px`,
-                    }}
-                  >
-                    {results.map((r) => {
-                      const syncUrl = tileSyncedUrls?.get(`${r.row}-${r.col}`);
-                      return (
-                        <div key={`${r.row}-${r.col}`} className='hw-tile-button'>
-                          {syncUrl && (
-                            <img
-                              src={syncUrl}
-                              alt={r.filename}
-                            />
-                          )}
+                  {results.length > 0 && (
+                    <>
+                      <div className='hw-device-cable'>
+                        <div className='hw-device-cable-plug' />
+                      </div>
+                      <div
+                        className='hw-mockup-frame'
+                        style={{
+                          maxWidth:
+                            preset.cols * previewTileSize +
+                            (preset.cols - 1) * scaledGap +
+                            48,
+                        }}
+                      >
+                        <div className='hw-mockup-logo-bar'>
+                          <img
+                            className='hw-mockup-logo'
+                            src='/logo-stream-deck-gif-splitter.png'
+                            alt='Stream Deck GIF Splitter'
+                          />
                         </div>
-                      );
-                    })}
-                  </div>
+                        <div
+                          className='hw-mockup-grid'
+                          style={{
+                            gridTemplateColumns: `repeat(${preset.cols}, 1fr)`,
+                            gap: `${scaledGap}px`,
+                          }}
+                        >
+                          {results.map((r) => (
+                            <div key={`${r.row}-${r.col}`} className='hw-tile-button'>
+                              <img
+                                key={tileSyncKey}
+                                src={r.url}
+                                alt={r.filename}
+                                onLoad={handleTileLoad}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
-              </div>
-            </section>
-          )}
+              </section>
+            )}
+          </div>
 
           {/* FAQ - styled as manual pages */}
           <section className='hw-screen-panel hw-faq-panel'>
