@@ -1,5 +1,5 @@
 import JSZip from 'jszip';
-import type { SplitResult } from './useFFmpeg';
+import type { SplitResult } from './ffmpeg';
 
 const BASE32HEX = '0123456789ABCDEFGHIJKLMNOPQRSTUV';
 

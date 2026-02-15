@@ -1,9 +1,3 @@
-/* ============================================================
-   Design 5: "Stream Deck Hardware"
-   The entire page mimics a giant Stream Deck device viewed from above.
-   Industrial, tactile, physical hardware aesthetic.
-   ============================================================ */
-
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 /* ---- Reset & Base ---- */
@@ -15,7 +9,7 @@
   padding: 0;
 }
 
-/* ---- Page background: dark industrial with brushed metal noise ---- */
+/* ---- Page background: dark industrial ---- */
 .hw-page {
   min-height: 100vh;
   background-color: #111114;
