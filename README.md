@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🎛️ Stream Deck GIF Splitter
+# Stream Deck GIF Splitter
 
 **✨ Turn any animated GIF into a seamless Stream Deck background — entirely in your browser. ✨**
 
