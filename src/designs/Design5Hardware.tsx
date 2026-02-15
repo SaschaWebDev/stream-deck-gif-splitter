@@ -495,28 +495,39 @@ function Design5Hardware() {
                   This is a browser-based tool that splits animated GIF files
                   into a grid of smaller animated tiles, designed to be used as
                   animated backgrounds on Elgato Stream Deck devices. All
-                  processing happens locally in your browser -- no files are
+                  processing happens locally in your browser — no files are
                   uploaded to any server.
                 </p>
               </details>
               <details className='hw-faq-item'>
                 <summary>Which Stream Deck models are supported?</summary>
                 <p>
-                  We currently support the Stream Deck MK.2 (5x3), Stream Deck
-                  XL (8x4), Stream Deck Mini (3x2), Stream Deck + (4x2), and
-                  Stream Deck Neo (4x2). Each preset automatically adjusts the
+                  We currently support the Stream Deck MK.2 (5×3), Stream Deck
+                  XL (8×4), Stream Deck Mini (3×2), Stream Deck + (4×2), and
+                  Stream Deck Neo (4×2). Each preset automatically adjusts the
                   crop dimensions and tile sizes to match the device.
                 </p>
               </details>
               <details className='hw-faq-item'>
                 <summary>How do I set up the tiles on my Stream Deck?</summary>
                 <p>
-                  After downloading the zip, extract the folder and assign each
-                  numbered tile to the corresponding button position in the
-                  Elgato Stream Deck software. You can also drag and drop the
-                  gif tiles onto the Stream Deck button below to insert them
-                  quicker. The tiles are numbered left-to-right, top-to-bottom
-                  to match the button layout. Check out{' '}
+                  <strong>Option 1 — ZIP download:</strong> Extract the folder
+                  and assign each numbered tile to the corresponding button
+                  position in the Elgato Stream Deck software. Tiles are
+                  numbered left-to-right, top-to-bottom to match the button
+                  layout. You can also drag and drop the GIF tiles onto the
+                  Stream Deck buttons to insert them quicker.
+                </p>
+                <p>
+                  <strong>Option 2 — .streamDeckProfile:</strong> Download the
+                  .streamDeckProfile file and open it. The Stream Deck software
+                  will automatically detect it and prompt you to install it.
+                  This creates a separate profile alongside your existing ones,
+                  so you can use it as a starting point or just preview how the
+                  animated background looks on your device.
+                </p>
+                <p>
+                  Check out{' '}
                   <a
                     href='https://youtu.be/uMJPHHkHC9k?si=nRqH2r-mB7Tkm97m&t=300'
                     target='_blank'
@@ -528,36 +539,22 @@ function Design5Hardware() {
                 </p>
               </details>
               <details className='hw-faq-item'>
-                <summary>How do I set up a .streamDeckProfile?</summary>
-                <p>
-                  Simply download the .streamDeckProfile file and open it. The
-                  Stream Deck software will automatically detect it and prompt
-                  you to install it. This creates a separate profile alongside
-                  your existing ones, so you can use it as a starting point for
-                  a new setup or just preview how the animated background looks
-                  on your device.
-                </p>
-              </details>
-              <details className='hw-faq-item'>
                 <summary>
-                  Why is the animation on my Stream Deck out of sync?
+                  Why is the animation out of sync or laggy?
                 </summary>
                 <p>
-                  Animated buttons falling out of sync on the Stream Deck is a
-                  common issue. To fix it, click the "Profile" dropdown in the
-                  Stream Deck software, switch to the Default Profile, then
-                  switch back to your profile. This forces all animations to
+                  <strong>Out of sync:</strong> Animated buttons falling out of
+                  sync is a common issue. To fix it, click the "Profile"
+                  dropdown in the Stream Deck software, switch to the Default
+                  Profile, then switch back. This forces all animations to
                   restart at the same time.
                 </p>
-              </details>
-              <details className='hw-faq-item'>
-                <summary>Why is the animation laggy or looks bad?</summary>
                 <p>
-                  The output quality depends heavily on your input GIF. Files
-                  with long animation cycles or large file sizes may not display
-                  well on the Stream Deck hardware. This tool uses high-quality
-                  encoding to preserve as much detail as possible, but if the
-                  result still looks off, try using a shorter or smaller GIF.
+                  <strong>Laggy or poor quality:</strong> The output quality
+                  depends heavily on your input GIF. Files with long animation
+                  cycles or large file sizes may not display well on the
+                  hardware. Try using a shorter or smaller GIF if the result
+                  looks off.
                 </p>
               </details>
               <details className='hw-faq-item'>
@@ -570,30 +567,17 @@ function Design5Hardware() {
                 </p>
               </details>
               <details className='hw-faq-item'>
-                <summary>Is my GIF uploaded to a server?</summary>
+                <summary>How does the processing work?</summary>
                 <p>
-                  No. All processing is done entirely in your browser using
-                  ffmpeg.wasm. Your files never leave your device. The ffmpeg
-                  library is loaded once from a CDN and cached by your browser.
-                </p>
-              </details>
-              <details className='hw-faq-item'>
-                <summary>
-                  Why does the first GIF take longer to process?
-                </summary>
-                <p>
-                  The first time you use the tool, it downloads the ffmpeg.wasm
-                  library (~31 MB). This is cached by your browser, so
-                  subsequent visits will be much faster.
-                </p>
-              </details>
-              <details className='hw-faq-item'>
-                <summary>What happens to my GIF quality?</summary>
-                <p>
-                  We use a high-quality two-pass encoding process with optimal
-                  palette generation and Floyd-Steinberg dithering to preserve
-                  as much quality as possible. The crop preview lets you review
-                  the result before splitting.
+                  All processing is done entirely in your browser using
+                  ffmpeg.wasm — your files never leave your device. The ffmpeg
+                  library (~31 MB) is loaded once from a CDN and cached by your
+                  browser, so the first use may take a moment but subsequent
+                  visits will be much faster. We use a high-quality two-pass
+                  encoding process with optimal palette generation and
+                  Floyd-Steinberg dithering to preserve as much quality as
+                  possible. The crop preview lets you review the result before
+                  splitting.
                 </p>
               </details>
             </div>
