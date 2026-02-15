@@ -84,14 +84,6 @@ npm run preview   # preview the production build locally
 
 ## ⚙️ How It Works
 
-```
-┌────────────┐     ┌──────────────┐     ┌──────────────┐     ┌────────────┐
-│  Drop GIF  │ ──▶ │  Crop & fit  │ ──▶ │  Split into  │ ──▶ │  Download  │
-│             │     │  to device   │     │  tile grid   │     │  ZIP or    │
-│             │     │  dimensions  │     │  (FFmpeg)    │     │  .sdProfile│
-└────────────┘     └──────────────┘     └──────────────┘     └────────────┘
-```
-
 1. 📤 **Upload** — Drop a GIF or click to browse
 2. ✂️ **Crop** — The GIF is automatically cropped and scaled to match your selected device's total button area (including optional gap compensation)
 3. 🔪 **Split** — FFmpeg slices the cropped GIF into individual tile animations using two-pass encoding for optimal quality
