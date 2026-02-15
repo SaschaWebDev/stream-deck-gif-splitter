@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import type { GiphyGif } from '../types';
 import { searchGifs, getTrending, fetchGifAsFile } from '../services/giphy';
 
-const LIMIT = 25;
+const LIMIT = 20;
 const DEBOUNCE_MS = 500;
 
 export function useGiphySearch() {
