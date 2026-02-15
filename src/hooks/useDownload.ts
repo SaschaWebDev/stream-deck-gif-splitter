@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import JSZip from 'jszip';
 import { generateStreamDeckProfile } from '../services/streamDeckProfile';
+import { generateZipFolderName, generateProfileFileName } from '../utils/filename';
 import type { SplitResult } from '../services/ffmpeg';
 import type { Preset } from '../constants/presets';
 
@@ -17,9 +18,7 @@ export function useDownload() {
     setZipping(true);
     try {
       const zip = new JSZip();
-      const baseName = file.name.replace(/\.gif$/i, '');
-      const suffix = cutoffMode ? '_tile-cutoff' : '';
-      const folderName = `${baseName}${suffix}_${Date.now()}`;
+      const folderName = generateZipFolderName(file.name, cutoffMode, Date.now());
       for (const r of results) {
         zip.file(`${folderName}/${r.filename}`, r.blob);
       }
@@ -44,17 +43,13 @@ export function useDownload() {
     setZippingProfile(true);
     try {
       const baseName = file.name.replace(/\.gif$/i, '');
-      const deviceName = preset.label.replace(/\s+/g, '-');
       const timestamp = Math.floor(Date.now() / 1000);
-      const suffix = `_${deviceName}_${timestamp}`;
-      const extension = '.streamDeckProfile';
-      const maxBase = 180 - suffix.length - extension.length;
-      const safeName = baseName.substring(0, maxBase);
+      const profileFileName = generateProfileFileName(file.name, preset.label, timestamp);
       const blob = await generateStreamDeckProfile(results, baseName, preset.model);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${safeName}${suffix}${extension}`;
+      a.download = profileFileName;
       a.click();
       URL.revokeObjectURL(url);
     } finally {
