@@ -19,19 +19,6 @@
 .hw-page {
   min-height: 100vh;
   background-color: #111114;
-  background-image:
-    repeating-linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.012) 0px,
-      transparent 1px,
-      transparent 3px
-    ),
-    repeating-linear-gradient(
-      0deg,
-      rgba(255, 255, 255, 0.008) 0px,
-      transparent 1px,
-      transparent 4px
-    );
   font-family:
     'DM Sans',
     -apple-system,
@@ -778,7 +765,9 @@
 }
 
 @keyframes hw-dot-bounce {
-  0%, 60%, 100% {
+  0%,
+  60%,
+  100% {
     transform: translateY(0);
   }
   30% {

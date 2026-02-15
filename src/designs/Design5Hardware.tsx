@@ -47,7 +47,10 @@ function Design5Hardware() {
   } = useGifSplitter();
 
   // Sync both GIF previews so they start their animation loop at the exact same frame
-  const [syncedSrcs, setSyncedSrcs] = useState<{ orig: string; crop: string } | null>(null);
+  const [syncedSrcs, setSyncedSrcs] = useState<{
+    orig: string;
+    crop: string;
+  } | null>(null);
   const origRef = useRef<HTMLImageElement>(null);
   const cropRef = useRef<HTMLImageElement>(null);
 
@@ -86,7 +89,9 @@ function Design5Hardware() {
     imgA.src = preview;
     imgB.src = croppedPreview;
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [preview, croppedPreview, isCropping, cropSyncKey]);
 
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -94,7 +99,10 @@ function Design5Hardware() {
   // Auto-scroll to results area when splitting starts
   useEffect(() => {
     if (isSplitting && resultsRef.current) {
-      resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      resultsRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
     }
   }, [isSplitting]);
 
@@ -123,7 +131,7 @@ function Design5Hardware() {
           <section className='hw-screen-panel hw-hero-panel'>
             <img
               className='hw-hero-logo'
-              src='/steam-deck-gif-splitter-logo-big.png'
+              src='/stream-deck-gif-splitter-logo-big.png'
               alt='Stream Deck GIF Splitter'
             />
             <h1 className='hw-title'>
@@ -279,7 +287,11 @@ function Design5Hardware() {
                   ? ` (${originalSize.w}px \u00d7 ${originalSize.h}px)`
                   : ''}{' '}
                 will be auto-cropped to {targetWidth}px &times; {targetHeight}px
-                (center crop). <span className='hw-crop-desc-br'><br /></span> Review the result before splitting.
+                (center crop).{' '}
+                <span className='hw-crop-desc-br'>
+                  <br />
+                </span>{' '}
+                Review the result before splitting.
               </p>
 
               <div className='hw-crop-compare'>
@@ -295,7 +307,11 @@ function Design5Hardware() {
                       />
                     ) : preview ? (
                       <div className='hw-crop-loading hw-crop-active'>
-                        {isCropping ? (loading ? 'Loading ffmpeg' : 'Cropping') : 'Syncing'}
+                        {isCropping
+                          ? loading
+                            ? 'Loading ffmpeg'
+                            : 'Cropping'
+                          : 'Syncing'}
                         <span className='hw-bounce-dots'>
                           <span className='hw-dot'>.</span>
                           <span className='hw-dot'>.</span>
@@ -451,7 +467,7 @@ function Design5Hardware() {
                         <div className='hw-mockup-logo-bar'>
                           <img
                             className='hw-mockup-logo'
-                            src='/logo-stream-deck-gif-splitter.png'
+                            src='/stream-deck-gif-splitter-logo.png'
                             alt='Stream Deck GIF Splitter'
                           />
                         </div>
@@ -463,7 +479,10 @@ function Design5Hardware() {
                           }}
                         >
                           {results.map((r) => (
-                            <div key={`${r.row}-${r.col}`} className='hw-tile-button'>
+                            <div
+                              key={`${r.row}-${r.col}`}
+                              className='hw-tile-button'
+                            >
                               <img
                                 key={tileSyncKey}
                                 src={r.url}
@@ -539,9 +558,7 @@ function Design5Hardware() {
                 </p>
               </details>
               <details className='hw-faq-item'>
-                <summary>
-                  Why is the animation out of sync or laggy?
-                </summary>
+                <summary>Why is the animation out of sync or laggy?</summary>
                 <p>
                   <strong>Out of sync:</strong> Animated buttons falling out of
                   sync is a common issue. To fix it, click the "Profile"
