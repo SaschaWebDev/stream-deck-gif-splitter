@@ -1,82 +1,136 @@
-# animated-stream-deck-background-gif-converter
-Simply drop in your gif and receive many squared gifs optimized to be used as an animated background for your stream deck.
+<div align="center">
+
+# 🎛️ Stream Deck GIF Splitter
+
+**✨ Turn any animated GIF into a seamless Stream Deck background — entirely in your browser. ✨**
+
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![React 19](https://img.shields.io/badge/React-19-61dafb.svg?logo=react&logoColor=white)](https://react.dev) [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178c6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org) [![Vite](https://img.shields.io/badge/Vite-7-646cff.svg?logo=vite&logoColor=white)](https://vite.dev) [![FFmpeg.wasm](https://img.shields.io/badge/FFmpeg.wasm-0.12-007808.svg?logo=ffmpeg&logoColor=white)](https://ffmpegwasm.netlify.app)
+
+<video src="https://github.com/SaschaWebDev/animated-stream-deck-background-gif-converter/raw/main/docs/stream-deck-gif-splitter-video.mp4" controls autoplay loop muted width="600"></video>
+
+[🚀 - Try it live -](https://stream-deck-gif-splitter.vercel.app) · [🐛 Report Bug](https://github.com/SaschaWebDev/animated-stream-deck-background-gif-converter/issues) · [💡 Request Feature](https://github.com/SaschaWebDev/animated-stream-deck-background-gif-converter/issues)
+
+</div>
 
 ---
 
-## Development
+## ℹ️ About
 
-### React + TypeScript + Vite
+Stream Deck GIF Splitter takes any animated GIF and slices it into a perfectly sized tile grid that maps 1:1 to your Elgato Stream Deck buttons — giving you a full-screen animated background across your entire device.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+All processing runs **100% client-side** using [FFmpeg.wasm](https://ffmpegwasm.netlify.app). No uploads, no servers, no account needed.
 
-Currently, two official plugins are available:
+### 🔥 Key Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- 🖱️ **Drag & drop** — Upload any GIF and see an instant cropped preview
+- 🎚️ **5 device presets** — Stream Deck MK.2, XL, Mini, +, and Neo
+- ✂️ **Cutoff mode** — Accounts for the physical gap between buttons so animations appear seamless
+- 🎨 **High-quality encoding** — Two-pass palette generation with Floyd-Steinberg dithering
+- 📦 **ZIP download** — Get all tiles in a numbered, ready-to-assign archive
+- 🗂️ **`.streamDeckProfile` export** — One-click installable profile with all tiles pre-assigned
+- 📡 **Fully offline** — FFmpeg is cached after first load; works without internet on repeat visits
+- 🔒 **Privacy-first** — Your files never leave your browser
 
-### React Compiler
+## 🎮 Supported Devices
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+| Device | Grid | Tile Size | Button Gap |
+|--------|------|-----------|------------|
+| Stream Deck MK.2 | 5 × 3 | 72 × 72 px | 16 px |
+| Stream Deck XL | 8 × 4 | 144 × 144 px | 40 px |
+| Stream Deck Mini | 3 × 2 | 72 × 72 px | 16 px |
+| Stream Deck + | 4 × 2 | 72 × 72 px | 16 px |
+| Stream Deck Neo | 4 × 2 | 72 × 72 px | 16 px |
 
-Note: This will impact Vite dev & build performances.
+## 🚀 Getting Started
 
-### Expanding the ESLint configuration
+### Prerequisites
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- [Node.js](https://nodejs.org) 18+ (LTS recommended)
+- npm, yarn, or pnpm
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### 📥 Installation
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+git clone https://github.com/SaschaWebDev/animated-stream-deck-background-gif-converter.git
+cd animated-stream-deck-background-gif-converter
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 💻 Development
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev
 ```
+
+Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+### 📦 Build
+
+```bash
+npm run build
+npm run preview   # preview the production build locally
+```
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| ⚛️ Framework | [React 19](https://react.dev) with [React Compiler](https://react.dev/learn/react-compiler) |
+| 🟦 Language | [TypeScript 5.9](https://www.typescriptlang.org) |
+| ⚡ Bundler | [Vite 7](https://vite.dev) |
+| 🎬 Video Processing | [FFmpeg.wasm 0.12](https://ffmpegwasm.netlify.app) |
+| 🗜️ Archive Generation | [JSZip](https://stuk.github.io/jszip/) |
+| 🧹 Linting | [ESLint 9](https://eslint.org) with TypeScript & React plugins |
+
+## ⚙️ How It Works
+
+```
+┌────────────┐     ┌──────────────┐     ┌──────────────┐     ┌────────────┐
+│  Drop GIF  │ ──▶ │  Crop & fit  │ ──▶ │  Split into  │ ──▶ │  Download  │
+│             │     │  to device   │     │  tile grid   │     │  ZIP or    │
+│             │     │  dimensions  │     │  (FFmpeg)    │     │  .sdProfile│
+└────────────┘     └──────────────┘     └──────────────┘     └────────────┘
+```
+
+1. 📤 **Upload** — Drop a GIF or click to browse
+2. ✂️ **Crop** — The GIF is automatically cropped and scaled to match your selected device's total button area (including optional gap compensation)
+3. 🔪 **Split** — FFmpeg slices the cropped GIF into individual tile animations using two-pass encoding for optimal quality
+4. 💾 **Export** — Download as a ZIP of numbered tiles or as a ready-to-install `.streamDeckProfile`
+
+## 📁 Project Structure
+
+```
+src/
+├── main.tsx                    # Entry point
+├── index.css                   # Global styles & CSS variables
+├── useFFmpeg.ts                # FFmpeg.wasm hook (crop, split, progress)
+├── streamDeckProfile.ts        # .streamDeckProfile ZIP generator
+├── shared/
+│   ├── presets.ts              # Device preset configurations
+│   └── useGifSplitter.ts       # Core business logic hook
+└── designs/
+    ├── Design5Hardware.tsx      # Main UI component
+    └── Design5Hardware.css      # Industrial hardware-themed styles
+```
+
+## 🤝 Contributing
+
+Contributions are welcome! Feel free to open an issue or submit a pull request.
+
+1. 🍴 Fork the repository
+2. 🌿 Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. 💾 Commit your changes (`git commit -m 'Add amazing feature'`)
+4. 📤 Push to the branch (`git push origin feature/amazing-feature`)
+5. 🎉 Open a Pull Request
+
+## 📄 License
+
+Distributed under the MIT License. See [`LICENSE`](LICENSE) for details.
+
+---
+
+<div align="center">
+
+Made with ❤️ by [Sascha Majewsky](https://github.com/SaschaWebDev)
+
+</div>
