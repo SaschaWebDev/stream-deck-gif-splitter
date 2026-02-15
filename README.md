@@ -64,6 +64,14 @@ npm run dev
 
 Open [http://localhost:5173](http://localhost:5173) in your browser.
 
+### 🧪 Testing
+
+```bash
+npm test              # run all tests once
+npm run test:watch    # run tests in watch mode
+npm run test:coverage # run tests with coverage report
+```
+
 ### 📦 Build
 
 ```bash
@@ -93,16 +101,36 @@ npm run preview   # preview the production build locally
 
 ```
 src/
-├── main.tsx                    # Entry point
-├── index.css                   # Global styles & CSS variables
-├── useFFmpeg.ts                # FFmpeg.wasm hook (crop, split, progress)
-├── streamDeckProfile.ts        # .streamDeckProfile ZIP generator
-├── shared/
-│   ├── presets.ts              # Device preset configurations
-│   └── useGifSplitter.ts       # Core business logic hook
-└── designs/
-    ├── Design5Hardware.tsx      # Main UI component
-    └── Design5Hardware.css      # Industrial hardware-themed styles
+├── main.tsx                          # Entry point
+├── App.tsx                           # Root application component
+├── index.css                         # Global styles & CSS variables
+├── App.css                           # App-level styles
+├── components/
+│   ├── CropPreview.tsx               # Cropped GIF preview with split controls
+│   ├── DeviceConfig.tsx              # Device preset & cutoff mode selector
+│   ├── FileDropZone.tsx              # Drag-and-drop file upload area
+│   ├── HeroSection.tsx               # Landing hero banner
+│   ├── ResultsPanel.tsx              # Tile grid results & download buttons
+│   └── UserManual.tsx                # Inline usage instructions
+├── constants/
+│   └── presets.ts                    # Device preset configurations
+├── hooks/
+│   ├── useAutoScroll.ts              # Auto-scroll to results
+│   ├── useDeviceConfig.ts            # Device preset state management
+│   ├── useDownload.ts                # ZIP & profile download logic
+│   ├── useFileUpload.ts              # File input & drag-and-drop handling
+│   ├── useGifProcessor.ts            # Crop & split orchestration
+│   └── useGifSync.ts                 # Synchronized GIF playback
+├── services/
+│   ├── ffmpeg.ts                     # FFmpeg.wasm hook (crop, split, progress)
+│   └── streamDeckProfile.ts          # .streamDeckProfile ZIP generator
+├── types/
+│   └── index.ts                      # Shared TypeScript interfaces
+└── utils/
+    ├── device.ts                     # Device dimension calculations
+    ├── filename.ts                   # Download filename generation
+    ├── format.ts                     # File size formatting
+    └── progress.ts                   # Progress label formatting
 ```
 
 ## 🤝 Contributing
