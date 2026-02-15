@@ -9,6 +9,7 @@ import { PRESETS } from './constants/presets';
 import { formatSize } from './utils/format';
 import { HeroSection } from './components/HeroSection';
 import { FileDropZone } from './components/FileDropZone';
+import { GifSourceTabs } from './components/GifSourceTabs';
 import { DeviceConfig } from './components/DeviceConfig';
 import { CropPreview } from './components/CropPreview';
 import { ResultsPanel } from './components/ResultsPanel';
@@ -141,19 +142,21 @@ function App() {
         <main className='hw-lcd-screen'>
           <HeroSection />
 
-          <FileDropZone
-            file={file}
-            preview={preview}
-            cropSyncKey={cropSyncKey}
-            isDragOver={isDragOver}
-            fileInputRef={fileInputRef}
-            formatSize={formatSize}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={(e) => handleDrop(e, handleFileUpload)}
-            onInputChange={(e) => handleInputChange(e, handleFileUpload)}
-            onClear={handleClearFile}
-          />
+          <GifSourceTabs hasFile={!!file} onGifSelected={handleFileUpload}>
+            <FileDropZone
+              file={file}
+              preview={preview}
+              cropSyncKey={cropSyncKey}
+              isDragOver={isDragOver}
+              fileInputRef={fileInputRef}
+              formatSize={formatSize}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, handleFileUpload)}
+              onInputChange={(e) => handleInputChange(e, handleFileUpload)}
+              onClear={handleClearFile}
+            />
+          </GifSourceTabs>
 
           {file && (
             <section className='hw-screen-panel hw-config-panel'>
