@@ -23,6 +23,7 @@ All processing runs **100% client-side** using [FFmpeg.wasm](https://ffmpegwasm.
 ### 🔥 Key Features
 
 - 🖱️ **Drag & drop** — Upload any GIF and see an instant cropped preview
+- 🔍 **GIPHY search** — Browse trending GIFs or search GIPHY directly from the app — no need to leave the page
 - 🎚️ **5 device presets** — Stream Deck MK.2, XL, Mini, +, and Neo
 - ✂️ **Cutoff mode** — Accounts for the physical gap between buttons so animations appear seamless
 - 🎨 **High-quality encoding** — Two-pass palette generation with Floyd-Steinberg dithering
@@ -88,11 +89,12 @@ npm run preview   # preview the production build locally
 | ⚡ Bundler            | [Vite 7](https://vite.dev)                                                                  |
 | 🎬 Video Processing   | [FFmpeg.wasm 0.12](https://ffmpegwasm.netlify.app)                                          |
 | 🗜️ Archive Generation | [JSZip](https://stuk.github.io/jszip/)                                                      |
+| 🔍 GIF Search         | [GIPHY API](https://developers.giphy.com)                                                   |
 | 🧹 Linting            | [ESLint 9](https://eslint.org) with TypeScript & React plugins                              |
 
 ## ⚙️ How It Works
 
-1. 📤 **Upload** — Drop a GIF or click to browse
+1. 📤 **Upload** — Drop a GIF, click to browse, or search GIPHY for the perfect animation
 2. ✂️ **Crop** — The GIF is automatically cropped and scaled to match your selected device's total button area (including optional gap compensation)
 3. 🔪 **Split** — FFmpeg slices the cropped GIF into individual tile animations using two-pass encoding for optimal quality
 4. 💾 **Export** — Download as a ZIP of numbered tiles or as a ready-to-install `.streamDeckProfile`
@@ -109,6 +111,8 @@ src/
 │   ├── CropPreview.tsx               # Cropped GIF preview with split controls
 │   ├── DeviceConfig.tsx              # Device preset & cutoff mode selector
 │   ├── FileDropZone.tsx              # Drag-and-drop file upload area
+│   ├── GifSourceTabs.tsx             # Upload / GIPHY toggle switcher
+│   ├── GiphyPicker.tsx              # GIPHY search, grid & GIF selection
 │   ├── HeroSection.tsx               # Landing hero banner
 │   ├── ResultsPanel.tsx              # Tile grid results & download buttons
 │   └── UserManual.tsx                # Inline usage instructions
@@ -120,9 +124,11 @@ src/
 │   ├── useDownload.ts                # ZIP & profile download logic
 │   ├── useFileUpload.ts              # File input & drag-and-drop handling
 │   ├── useGifProcessor.ts            # Crop & split orchestration
-│   └── useGifSync.ts                 # Synchronized GIF playback
+│   ├── useGifSync.ts                 # Synchronized GIF playback
+│   └── useGiphySearch.ts             # GIPHY search state & debouncing
 ├── services/
 │   ├── ffmpeg.ts                     # FFmpeg.wasm hook (crop, split, progress)
+│   ├── giphy.ts                      # GIPHY API service & GIF-to-File fetcher
 │   └── streamDeckProfile.ts          # .streamDeckProfile ZIP generator
 ├── types/
 │   └── index.ts                      # Shared TypeScript interfaces
