@@ -3,6 +3,15 @@ import type { RefObject } from 'react';
 export type { SplitResult, SplitProgress } from '../services/ffmpeg';
 export type { Preset } from '../constants/presets';
 
+export interface GiphyGif {
+  id: string;
+  title: string;
+  images: {
+    original: { url: string };
+    fixed_width: { url: string; width: string; height: string };
+  };
+}
+
 export interface SyncedSrcs {
   orig: string;
   crop: string;
