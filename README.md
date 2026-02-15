@@ -8,7 +8,7 @@
 
 <img src="https://github.com/SaschaWebDev/animated-stream-deck-background-gif-converter/raw/develop/docs/stream-deck-gif-splitter-showcase.gif" width="600" alt="Stream Deck GIF Splitter" />
 
-[🚀 - Try it live -](https://stream-deck-gif-splitter.vercel.app) · [🐛 Report Bug](https://github.com/SaschaWebDev/animated-stream-deck-background-gif-converter/issues) · [💡 Request Feature](https://github.com/SaschaWebDev/animated-stream-deck-background-gif-converter/issues)
+[🚀 - Try it live -](https://gif.saschaweb.dev) · [🐛 Report Bug](https://github.com/SaschaWebDev/animated-stream-deck-background-gif-converter/issues) · [💡 Request Feature](https://github.com/SaschaWebDev/animated-stream-deck-background-gif-converter/issues)
 
 </div>
 
