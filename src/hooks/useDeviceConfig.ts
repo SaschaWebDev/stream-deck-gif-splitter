@@ -1,16 +1,23 @@
 import { useState } from 'react';
 import { PRESETS } from '../constants/presets';
+import {
+  calculateTargetWidth,
+  calculateTargetHeight,
+  calculateGap,
+  calculatePreviewTileSize,
+  calculateScaledGap,
+} from '../utils/device';
 
 export function useDeviceConfig() {
   const [presetIndex, setPresetIndex] = useState(0);
   const [cutoffMode, setCutoffMode] = useState(true);
 
   const preset = PRESETS[presetIndex];
-  const gap = cutoffMode ? preset.gap : 0;
-  const targetWidth = preset.cols * preset.tileWidth + (cutoffMode ? (preset.cols - 1) * preset.gap : 0);
-  const targetHeight = preset.rows * preset.tileHeight + (cutoffMode ? (preset.rows - 1) * preset.gap : 0);
-  const previewTileSize = Math.min(preset.tileWidth, 72);
-  const scaledGap = cutoffMode ? Math.round(preset.gap * (previewTileSize / preset.tileWidth)) : 16;
+  const gap = calculateGap(preset, cutoffMode);
+  const targetWidth = calculateTargetWidth(preset, cutoffMode);
+  const targetHeight = calculateTargetHeight(preset, cutoffMode);
+  const previewTileSize = calculatePreviewTileSize(preset);
+  const scaledGap = calculateScaledGap(preset, cutoffMode);
 
   return {
     presetIndex,

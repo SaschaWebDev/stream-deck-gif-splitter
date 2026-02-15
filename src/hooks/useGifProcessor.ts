@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { useFFmpeg } from '../services/ffmpeg';
+import { getProgressLabel } from '../utils/progress';
 import type { SplitResult } from '../services/ffmpeg';
 
 export function useGifProcessor() {
@@ -16,15 +17,7 @@ export function useGifProcessor() {
 
   const isSplitting = progress !== null && progress.phase !== 'done';
 
-  const progressLabel = (() => {
-    if (!progress) return '';
-    switch (progress.phase) {
-      case 'loading': return 'Loading ffmpeg...';
-      case 'palette': return 'Generating palette...';
-      case 'splitting': return `Splitting tile ${progress.current} of ${progress.total}...`;
-      case 'done': return 'Done!';
-    }
-  })();
+  const progressLabel = getProgressLabel(progress);
 
   const performCrop = useCallback(async (f: File, tw: number, th: number) => {
     setIsCropping(true);
