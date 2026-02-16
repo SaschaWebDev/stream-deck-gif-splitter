@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState, useRef } from 'react';
 import { useFileUpload } from './hooks/useFileUpload';
 import { useDeviceConfig } from './hooks/useDeviceConfig';
 import { useGifProcessor } from './hooks/useGifProcessor';
@@ -7,6 +7,7 @@ import { useAutoScroll } from './hooks/useAutoScroll';
 import { useDownload } from './hooks/useDownload';
 import { PRESETS } from './constants/presets';
 import { formatSize } from './utils/format';
+import { parseGifDuration } from './utils/gifDuration';
 import { HeroSection } from './components/HeroSection';
 import { FileDropZone } from './components/FileDropZone';
 import { GifSourceTabs } from './components/GifSourceTabs';
@@ -57,11 +58,19 @@ function App() {
     progressLabel,
     performCrop,
     performSplit,
+    extractFrames,
     handleTileLoad,
     resetProcessor,
     clearResults,
     clearCroppedPreview,
   } = useGifProcessor();
+
+  const [customCropEnabled, setCustomCropEnabled] = useState(false);
+  const [customLoopEnabled, setCustomLoopEnabled] = useState(false);
+  const [trimRange, setTrimRange] = useState<{ start: number; end: number } | null>(null);
+  const [gifDuration, setGifDuration] = useState<number | null>(null);
+  const [filmstripFrames, setFilmstripFrames] = useState<string[]>([]);
+  const trimRangeRef = useRef<{ start: number; end: number } | null>(null);
 
   const syncedSrcs = useGifSync(preview, croppedPreview, isCropping, cropSyncKey);
   const resultsRef = useAutoScroll(isSplitting);
@@ -72,9 +81,21 @@ function App() {
   const handleFileUpload = useCallback(async (f: File) => {
     if (f.type !== 'image/gif') return;
     await resetProcessor();
+    setTrimRange(null);
+    trimRangeRef.current = null;
+    setCustomLoopEnabled(false);
+    filmstripFrames.forEach((url) => URL.revokeObjectURL(url));
+    setFilmstripFrames([]);
+    const duration = await parseGifDuration(f);
+    setGifDuration(duration);
     await setFileWithPreview(f);
     await performCrop(f, targetWidth, targetHeight);
-  }, [resetProcessor, setFileWithPreview, performCrop, targetWidth, targetHeight]);
+    // Extract filmstrip frames after crop (FFmpeg is now loaded)
+    if (duration > 0) {
+      const frames = await extractFrames(f, duration, 7);
+      setFilmstripFrames(frames);
+    }
+  }, [resetProcessor, setFileWithPreview, performCrop, extractFrames, targetWidth, targetHeight, filmstripFrames]);
 
   const handlePresetChange = useCallback(async (newIndex: number) => {
     setPresetIndex(newIndex);
@@ -87,7 +108,8 @@ function App() {
 
     if (file) {
       await clearCroppedPreview();
-      await performCrop(file, tw, th);
+      const tr = trimRangeRef.current;
+      await performCrop(file, tw, th, undefined, undefined, tr?.start, tr?.end);
     }
   }, [file, setPresetIndex, setCutoffMode, clearResults, clearCroppedPreview, performCrop]);
 
@@ -100,14 +122,66 @@ function App() {
 
     if (file) {
       await clearCroppedPreview();
-      await performCrop(file, tw, th);
+      const tr = trimRangeRef.current;
+      await performCrop(file, tw, th, undefined, undefined, tr?.start, tr?.end);
     }
   }, [file, setCutoffMode, preset, clearResults, clearCroppedPreview, performCrop]);
+
+  const handleCustomCropToggle = useCallback(async (checked: boolean) => {
+    setCustomCropEnabled(checked);
+    if (!checked) {
+      clearResults();
+      if (file) {
+        await clearCroppedPreview();
+        const tr = trimRangeRef.current;
+        await performCrop(file, targetWidth, targetHeight, undefined, undefined, tr?.start, tr?.end);
+      }
+    }
+  }, [file, targetWidth, targetHeight, clearResults, clearCroppedPreview, performCrop]);
+
+  const handleCropOffsetChange = useCallback(async (x: number, y: number) => {
+    clearResults();
+    if (file) {
+      await clearCroppedPreview();
+      const tr = trimRangeRef.current;
+      await performCrop(file, targetWidth, targetHeight, x, y, tr?.start, tr?.end);
+    }
+  }, [file, targetWidth, targetHeight, clearResults, clearCroppedPreview, performCrop]);
+
+  const handleCustomLoopToggle = useCallback(async (checked: boolean) => {
+    setCustomLoopEnabled(checked);
+    if (!checked) {
+      setTrimRange(null);
+      trimRangeRef.current = null;
+      clearResults();
+      if (file) {
+        await clearCroppedPreview();
+        await performCrop(file, targetWidth, targetHeight);
+      }
+    }
+  }, [file, targetWidth, targetHeight, clearResults, clearCroppedPreview, performCrop]);
+
+  const handleTrimChange = useCallback(async (start: number, end: number) => {
+    setTrimRange({ start, end });
+    trimRangeRef.current = { start, end };
+    clearResults();
+    if (file) {
+      await clearCroppedPreview();
+      await performCrop(file, targetWidth, targetHeight, undefined, undefined, start, end);
+    }
+  }, [file, targetWidth, targetHeight, clearResults, clearCroppedPreview, performCrop]);
 
   const handleClearFile = useCallback(async () => {
     await resetProcessor();
     clearUpload();
-  }, [resetProcessor, clearUpload]);
+    setCustomCropEnabled(false);
+    setCustomLoopEnabled(false);
+    setTrimRange(null);
+    trimRangeRef.current = null;
+    setGifDuration(null);
+    filmstripFrames.forEach((url) => URL.revokeObjectURL(url));
+    setFilmstripFrames([]);
+  }, [resetProcessor, clearUpload, filmstripFrames]);
 
   const handleSplit = useCallback(async () => {
     if (!file) return;
@@ -163,6 +237,8 @@ function App() {
               <DeviceConfig
                 presetIndex={presetIndex}
                 cutoffMode={cutoffMode}
+                customCropEnabled={customCropEnabled}
+                customLoopEnabled={customLoopEnabled}
                 targetWidth={targetWidth}
                 targetHeight={targetHeight}
                 preset={preset}
@@ -170,6 +246,8 @@ function App() {
                 isSplitting={isSplitting}
                 onPresetChange={handlePresetChange}
                 onCutoffToggle={handleCutoffToggle}
+                onCustomCropToggle={handleCustomCropToggle}
+                onCustomLoopToggle={handleCustomLoopToggle}
               />
 
               <CropPreview
@@ -185,7 +263,14 @@ function App() {
                 targetHeight={targetHeight}
                 originalSize={originalSize}
                 progressLabel={progressLabel}
+                customCropEnabled={customCropEnabled}
+                customLoopEnabled={customLoopEnabled}
+                gifDuration={gifDuration}
+                trimRange={trimRange}
+                filmstripFrames={filmstripFrames}
                 onSplit={handleSplit}
+                onCropOffsetChange={handleCropOffsetChange}
+                onTrimChange={handleTrimChange}
               />
             </section>
           )}

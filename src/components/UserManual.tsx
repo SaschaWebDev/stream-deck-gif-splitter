@@ -93,7 +93,11 @@ export function UserManual() {
             encoding process with optimal palette generation and
             Floyd-Steinberg dithering to preserve as much quality as
             possible. The crop preview lets you review the result before
-            splitting.
+            splitting. Enable <strong>Custom Crop</strong> to drag the
+            crop region and choose which area to keep instead of
+            center-cropping. Enable <strong>Custom Loop</strong> to trim
+            the animation length — drag the timeline handles to select
+            which portion of the GIF to keep.
           </p>
         </details>
       </div>

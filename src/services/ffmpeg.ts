@@ -1,6 +1,7 @@
 import { useRef, useState, useCallback } from 'react'
 import { FFmpeg } from '@ffmpeg/ffmpeg'
 import { toBlobURL, fetchFile } from '@ffmpeg/util'
+import { buildScaleCropFilter, buildTrimArgs } from '../utils/crop'
 
 export interface SplitResult {
   row: number
@@ -41,28 +42,33 @@ export function useFFmpeg() {
     setLoading(false)
   }, [loaded])
 
-  /** Scale & center-crop the GIF to the given dimensions with high-quality two-pass palette. Returns a blob URL for preview. */
-  const cropGif = useCallback(async (file: File, targetWidth: number, targetHeight: number): Promise<string> => {
+  /** Scale & crop the GIF to the given dimensions with high-quality two-pass palette. Optional cropX/cropY offset (default: center). Optional trimStart/trimEnd to trim temporal range. Returns a blob URL for preview. */
+  const cropGif = useCallback(async (file: File, targetWidth: number, targetHeight: number, cropX?: number, cropY?: number, trimStart?: number, trimEnd?: number): Promise<string> => {
     await ensureLoaded()
     const ffmpeg = ffmpegRef.current!
 
-    const scaleCrop = `scale=${targetWidth}:${targetHeight}:force_original_aspect_ratio=increase:flags=lanczos,crop=${targetWidth}:${targetHeight}`
+    const scaleCrop = buildScaleCropFilter(targetWidth, targetHeight, cropX, cropY)
+    const { pre: trimPre, out: trimOut } = buildTrimArgs(trimStart, trimEnd)
 
     const inputData = await fetchFile(file)
     await ffmpeg.writeFile('input.gif', inputData)
 
     // Pass 1: Generate optimal palette from the scaled+cropped frames
     await ffmpeg.exec([
+      ...trimPre,
       '-i', 'input.gif',
       '-vf', `${scaleCrop},palettegen=stats_mode=full`,
+      ...trimOut,
       '-y', 'crop_palette.png',
     ])
 
     // Pass 2: Re-encode with the optimal palette using best dithering
     await ffmpeg.exec([
+      ...trimPre,
       '-i', 'input.gif',
       '-i', 'crop_palette.png',
       '-lavfi', `${scaleCrop} [x]; [x][1:v] paletteuse=dither=floyd_steinberg`,
+      ...trimOut,
       '-y', 'cropped.gif',
     ])
 
@@ -141,6 +147,42 @@ export function useFFmpeg() {
     return results
   }, [])
 
+  /** Extract evenly-spaced snapshot frames from a GIF for filmstrip display. */
+  const extractFrames = useCallback(async (file: File, duration: number, count: number): Promise<string[]> => {
+    await ensureLoaded()
+    const ffmpeg = ffmpegRef.current!
+
+    const inputData = await fetchFile(file)
+    await ffmpeg.writeFile('filmstrip_input.gif', inputData)
+
+    const urls: string[] = []
+    for (let i = 0; i < count; i++) {
+      const timestamp = (duration * (i + 0.5)) / count
+      const outName = `filmstrip_${i}.png`
+
+      await ffmpeg.exec([
+        '-ss', timestamp.toFixed(3),
+        '-i', 'filmstrip_input.gif',
+        '-frames:v', '1',
+        '-vf', 'scale=-1:64:flags=lanczos',
+        '-y', outName,
+      ])
+
+      try {
+        const data = await ffmpeg.readFile(outName)
+        const part: BlobPart = typeof data === 'string' ? data : new Uint8Array(data)
+        const blob = new Blob([part], { type: 'image/png' })
+        urls.push(URL.createObjectURL(blob))
+        await ffmpeg.deleteFile(outName)
+      } catch {
+        // Frame extraction failed for this timestamp, skip
+      }
+    }
+
+    await ffmpeg.deleteFile('filmstrip_input.gif')
+    return urls
+  }, [ensureLoaded])
+
   /** Remove the cropped.gif from the virtual FS. */
   const cleanup = useCallback(async () => {
     if (!ffmpegRef.current) return
@@ -151,5 +193,5 @@ export function useFFmpeg() {
     setProgress(null)
   }, [])
 
-  return { loaded, loading, ensureLoaded, cropGif, splitGif, cleanup, progress, resetProgress }
+  return { loaded, loading, ensureLoaded, cropGif, splitGif, extractFrames, cleanup, progress, resetProgress }
 }

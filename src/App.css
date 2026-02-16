@@ -769,8 +769,160 @@
   }
 }
 
+/* ---- Crop Editor (custom crop positioning) ---- */
+.hw-crop-editor {
+  position: relative;
+  overflow: hidden;
+  margin: 0 auto;
+  border-radius: 4px;
+  touch-action: none;
+  user-select: none;
+}
+
+.hw-crop-viewport .hw-crop-editor-img {
+  display: block;
+  border-radius: 4px;
+  max-height: none;
+}
+
+.hw-crop-editor-mask {
+  position: absolute;
+  pointer-events: none;
+}
+
+.hw-crop-editor-rect {
+  position: absolute;
+  border: 2px dashed #3b82f6;
+  box-shadow:
+    0 0 0 1px rgba(59, 130, 246, 0.3),
+    0 0 12px rgba(59, 130, 246, 0.15);
+  border-radius: 2px;
+  touch-action: none;
+}
+
 .hw-crop-error {
   color: #ef4444;
+}
+
+/* ---- Timeline scrubber (Custom Loop) ---- */
+.hw-timeline {
+  padding: 0 12px 10px;
+}
+
+.hw-timeline-disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.hw-timeline-filmstrip {
+  position: relative;
+  height: 32px;
+  border-radius: 4px 4px 0 0;
+  overflow: hidden;
+  background: #0a0a0c;
+  border: 1px solid #1e1e24;
+  border-bottom: none;
+  display: flex;
+}
+
+.hw-timeline-filmstrip-tile {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 32px;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+
+.hw-timeline-filmstrip-trim {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      rgba(60, 60, 65, 0.7) 0px,
+      rgba(60, 60, 65, 0.7) 3px,
+      rgba(35, 35, 40, 0.75) 3px,
+      rgba(35, 35, 40, 0.75) 7px
+    );
+}
+
+.hw-timeline-track {
+  position: relative;
+  height: 10px;
+  background: #1a1a1e;
+  border-radius: 0 0 4px 4px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
+  border: 1px solid #27272a;
+  touch-action: none;
+  user-select: none;
+}
+
+.hw-timeline-selected {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, #2563eb, #1d4ed8);
+  border-radius: 3px;
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.3);
+}
+
+.hw-timeline-handle {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 26px;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(180deg, #60a5fa, #3b82f6);
+  border: 1px solid #93c5fd;
+  border-radius: 4px;
+  cursor: grab;
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  z-index: 2;
+  touch-action: none;
+}
+
+.hw-timeline-handle:hover {
+  background: linear-gradient(180deg, #93c5fd, #60a5fa);
+}
+
+.hw-timeline-handle-active {
+  cursor: grabbing;
+  background: linear-gradient(180deg, #93c5fd, #60a5fa);
+  box-shadow:
+    0 0 10px rgba(59, 130, 246, 0.5),
+    0 2px 6px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.hw-timeline-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  font-weight: 500;
+  color: #52525b;
+  letter-spacing: 0.5px;
+}
+
+.hw-timeline-label-active {
+  color: #60a5fa;
+  font-weight: 600;
+  text-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+}
+
+/* ---- Crop label tag (custom crop / custom loop indicators) ---- */
+.hw-crop-label-tag {
+  margin-left: 6px;
+  color: #3b82f6;
+  font-weight: 500;
+  letter-spacing: 1px;
+  font-size: 0.6rem;
 }
 
 /* ---- Split button (big physical button) ---- */

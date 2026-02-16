@@ -4,6 +4,8 @@ import type { DeviceConfigProps } from '../types';
 export function DeviceConfig({
   presetIndex,
   cutoffMode,
+  customCropEnabled,
+  customLoopEnabled,
   targetWidth,
   targetHeight,
   preset,
@@ -11,6 +13,8 @@ export function DeviceConfig({
   isSplitting,
   onPresetChange,
   onCutoffToggle,
+  onCustomCropToggle,
+  onCustomLoopToggle,
 }: DeviceConfigProps) {
   return (
     <>
@@ -66,6 +70,44 @@ export function DeviceConfig({
           </label>
           <span className='hw-toggle-desc'>
             Space between buttons will be cutoff from image.
+          </span>
+        </div>
+
+        <div className='hw-cutoff-toggle'>
+          <label className='hw-toggle-wrapper'>
+            <input
+              type='checkbox'
+              id='hw-custom-crop'
+              checked={customCropEnabled}
+              onChange={(e) => onCustomCropToggle(e.target.checked)}
+              disabled={isCropping || isSplitting}
+            />
+            <span className='hw-toggle-track'>
+              <span className='hw-toggle-thumb' />
+            </span>
+            <span className='hw-toggle-label'>Custom Crop</span>
+          </label>
+          <span className='hw-toggle-desc'>
+            Drag crop region instead of center crop.
+          </span>
+        </div>
+
+        <div className='hw-cutoff-toggle'>
+          <label className='hw-toggle-wrapper'>
+            <input
+              type='checkbox'
+              id='hw-custom-loop'
+              checked={customLoopEnabled}
+              onChange={(e) => onCustomLoopToggle(e.target.checked)}
+              disabled={isCropping || isSplitting}
+            />
+            <span className='hw-toggle-track'>
+              <span className='hw-toggle-thumb' />
+            </span>
+            <span className='hw-toggle-label'>Custom Loop</span>
+          </label>
+          <span className='hw-toggle-desc'>
+            Trim the animation loop length.
           </span>
         </div>
       </div>
