@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://gif.saschaweb.dev/sitemap.xml
