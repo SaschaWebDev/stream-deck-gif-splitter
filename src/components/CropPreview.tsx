@@ -302,11 +302,21 @@ export function CropPreview({
                 />
               </div>
               <div className='hw-timeline-labels'>
-                <span className={trimStart > 0.05 ? 'hw-timeline-label-active' : ''}>
-                  {formatTime(trimStart)}
+                <span className='hw-timeline-label-group'>
+                  {trimStart > 0.05 && (
+                    <span className='hw-timeline-label-original'>{formatTime(0)}</span>
+                  )}
+                  <span className={trimStart > 0.05 ? 'hw-timeline-label-active' : ''}>
+                    {formatTime(trimStart)}
+                  </span>
                 </span>
-                <span className={trimEnd < gifDuration - 0.05 ? 'hw-timeline-label-active' : ''}>
-                  {formatTime(trimEnd)}
+                <span className='hw-timeline-label-group'>
+                  <span className={trimEnd < gifDuration - 0.05 ? 'hw-timeline-label-active' : ''}>
+                    {formatTime(trimEnd)}
+                  </span>
+                  {trimEnd < gifDuration - 0.05 && (
+                    <span className='hw-timeline-label-original'>{formatTime(gifDuration)}</span>
+                  )}
                 </span>
               </div>
             </div>
@@ -333,10 +343,10 @@ export function CropPreview({
 
         <div className='hw-crop-card'>
           <span className='hw-crop-label'>
-            {targetWidth} &times; {targetHeight}
+            <span className='hw-crop-label-dims'>{targetWidth}px &times; {targetHeight}px</span>
             {customCropEnabled && <span className='hw-crop-label-tag'>(custom crop)</span>}
             {customLoopEnabled && gifDuration != null && gifDuration > 0 && (
-              <span className='hw-crop-label-tag'>({formatTime(trimEnd - trimStart)} loop)</span>
+              <span className='hw-crop-label-tag'>({(trimEnd - trimStart).toFixed(1)}s loop)</span>
             )}
           </span>
           <div className='hw-crop-viewport'>

@@ -910,6 +910,18 @@
   letter-spacing: 0.5px;
 }
 
+.hw-timeline-label-group {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+}
+
+.hw-timeline-label-original {
+  color: #52525b;
+  text-decoration: line-through;
+  font-weight: 400;
+}
+
 .hw-timeline-label-active {
   color: #60a5fa;
   font-weight: 600;
@@ -917,12 +929,17 @@
 }
 
 /* ---- Crop label tag (custom crop / custom loop indicators) ---- */
+.hw-crop-label-dims {
+  text-transform: none;
+}
+
 .hw-crop-label-tag {
   margin-left: 6px;
   color: #3b82f6;
   font-weight: 500;
   letter-spacing: 1px;
   font-size: 0.6rem;
+  text-transform: none;
 }
 
 /* ---- Split button (big physical button) ---- */
