@@ -13,17 +13,17 @@ export function useGifProcessor() {
   const [tileSyncKey] = useState(0);
   const tileLoadCount = useRef(0);
 
-  const { loading, cropGif, splitGif, cleanup, progress, resetProgress } = useFFmpeg();
+  const { loading, cropGif, splitGif, extractFrames, cleanup, progress, resetProgress } = useFFmpeg();
 
   const isSplitting = progress !== null && progress.phase !== 'done';
 
   const progressLabel = getProgressLabel(progress);
 
-  const performCrop = useCallback(async (f: File, tw: number, th: number) => {
+  const performCrop = useCallback(async (f: File, tw: number, th: number, cropX?: number, cropY?: number, trimStart?: number, trimEnd?: number) => {
     setIsCropping(true);
     setError(null);
     try {
-      const url = await cropGif(f, tw, th);
+      const url = await cropGif(f, tw, th, cropX, cropY, trimStart, trimEnd);
       setCroppedPreview(url);
       setCropSyncKey((k) => k + 1);
     } catch (err) {
@@ -102,6 +102,7 @@ export function useGifProcessor() {
     progressLabel,
     performCrop,
     performSplit,
+    extractFrames,
     handleTileLoad,
     resetProcessor,
     clearResults,

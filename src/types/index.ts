@@ -34,6 +34,8 @@ export interface FileDropZoneProps {
 export interface DeviceConfigProps {
   presetIndex: number;
   cutoffMode: boolean;
+  customCropEnabled: boolean;
+  customLoopEnabled: boolean;
   targetWidth: number;
   targetHeight: number;
   preset: import('../constants/presets').Preset;
@@ -41,6 +43,8 @@ export interface DeviceConfigProps {
   isSplitting: boolean;
   onPresetChange: (index: number) => void;
   onCutoffToggle: (checked: boolean) => void;
+  onCustomCropToggle: (checked: boolean) => void;
+  onCustomLoopToggle: (checked: boolean) => void;
 }
 
 export interface CropPreviewProps {
@@ -56,7 +60,14 @@ export interface CropPreviewProps {
   targetHeight: number;
   originalSize: { w: number; h: number } | null;
   progressLabel: string;
+  customCropEnabled: boolean;
+  customLoopEnabled: boolean;
+  gifDuration: number | null;
+  trimRange: { start: number; end: number } | null;
+  filmstripFrames: string[];
   onSplit: () => void;
+  onCropOffsetChange: (x: number, y: number) => void;
+  onTrimChange: (start: number, end: number) => void;
 }
 
 export interface ResultsPanelProps {
