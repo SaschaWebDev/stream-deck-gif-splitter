@@ -3,11 +3,89 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Google Search Console -->
+    <meta name="google-site-verification" content="tNCajCEMMJYwErDt7N3TU9RAm5xiUnDV5R5roI8-8g0" />
+
+    <!-- Primary SEO -->
+    <title>Stream Deck GIF Splitter — Animated Backgrounds for Elgato Stream Deck</title>
+    <meta name="description" content="Turn any animated GIF into a seamless Stream Deck background. Split GIFs into perfectly sized tiles for Stream Deck MK.2, XL, Mini, +, and Neo — 100% free, runs entirely in your browser." />
+    <meta name="keywords" content="Stream Deck, GIF splitter, animated background, Elgato, Stream Deck MK.2, Stream Deck XL, Stream Deck Mini, GIF tiles, stream deck wallpaper, stream deck animated, gif to stream deck" />
+    <link rel="canonical" href="https://gif.saschaweb.dev/" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://gif.saschaweb.dev/" />
+    <meta property="og:title" content="Stream Deck GIF Splitter — Animated Backgrounds for Elgato Stream Deck" />
+    <meta property="og:description" content="Turn any animated GIF into a seamless Stream Deck background. Split GIFs into perfectly sized tiles — free and 100% in-browser." />
+    <meta property="og:image" content="https://gif.saschaweb.dev/stream-deck-gif-splitter-logo-big.png" />
+    <meta property="og:site_name" content="Stream Deck GIF Splitter" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Stream Deck GIF Splitter — Animated Backgrounds for Elgato Stream Deck" />
+    <meta name="twitter:description" content="Turn any animated GIF into a seamless Stream Deck background. Split GIFs into perfectly sized tiles — free and 100% in-browser." />
+    <meta name="twitter:image" content="https://gif.saschaweb.dev/stream-deck-gif-splitter-logo-big.png" />
+
+    <!-- Favicon & Theme -->
     <link rel="icon" type="image/png" href="/stream-deck-gif-splitter-logo-square.png" />
-    <title>GIF Splitter for Stream Deck</title>
+    <link rel="apple-touch-icon" href="/stream-deck-gif-splitter-logo-square.png" />
+    <meta name="theme-color" content="#0a0a0c" />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Stream Deck GIF Splitter",
+      "url": "https://gif.saschaweb.dev/",
+      "description": "Turn any animated GIF into a seamless Stream Deck background. Split GIFs into perfectly sized tiles for Elgato Stream Deck devices — 100% free, runs entirely in your browser.",
+      "applicationCategory": "MultimediaApplication",
+      "operatingSystem": "Any",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "browserRequirements": "Requires a modern browser with WebAssembly support",
+      "featureList": [
+        "Split animated GIFs into Stream Deck button tiles",
+        "Support for Stream Deck MK.2, XL, Mini, +, and Neo",
+        "GIPHY search integration",
+        "Custom crop position",
+        "Custom loop trim",
+        "Cutoff mode for seamless button gaps",
+        "ZIP and .streamDeckProfile export",
+        "100% client-side processing"
+      ]
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <h1>Stream Deck GIF Splitter</h1>
+      <p>Turn any animated GIF into a seamless Stream Deck background — entirely in your browser.</p>
+      <h2>Features</h2>
+      <ul>
+        <li>Drag and drop any GIF or search GIPHY directly</li>
+        <li>5 device presets: Stream Deck MK.2, XL, Mini, +, and Neo</li>
+        <li>Cutoff mode accounts for physical button gaps</li>
+        <li>Custom crop position — drag to choose which part of the GIF to keep</li>
+        <li>Custom loop trim — shorten the animation with a timeline scrubber</li>
+        <li>High-quality two-pass encoding with Floyd-Steinberg dithering</li>
+        <li>Download as ZIP or one-click .streamDeckProfile install</li>
+        <li>100% client-side — your files never leave your browser</li>
+      </ul>
+      <h2>How It Works</h2>
+      <ol>
+        <li>Upload a GIF or search GIPHY for the perfect animation</li>
+        <li>Choose your Stream Deck model and configure crop settings</li>
+        <li>Optionally trim the animation loop length</li>
+        <li>Split into perfectly sized tiles and download</li>
+      </ol>
+      <p>All processing runs locally using FFmpeg.wasm. No uploads, no servers, no account needed.</p>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
