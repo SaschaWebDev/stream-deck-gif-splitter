@@ -98,8 +98,9 @@ npm run preview   # preview the production build locally
 
 1. 📤 **Upload** — Drop a GIF, click to browse, or search GIPHY for the perfect animation
 2. ✂️ **Crop** — The GIF is automatically cropped and scaled to match your selected device's total button area (including optional gap compensation). Enable **Custom Crop** to drag the crop region and choose which area to keep
-3. 🔪 **Split** — FFmpeg slices the cropped GIF into individual tile animations using two-pass encoding for optimal quality
-4. 💾 **Export** — Download as a ZIP of numbered tiles or as a ready-to-install `.streamDeckProfile`
+3. 🔁 **Trim** — Enable **Custom Loop** to shorten the animation loop. A filmstrip timeline shows snapshot frames at evenly-spaced intervals; drag the left/right handles to select the portion you want. Trimmed-out regions are shown with a striped overlay
+4. 🔪 **Split** — FFmpeg slices the cropped GIF into individual tile animations using two-pass encoding for optimal quality
+5. 💾 **Export** — Download as a ZIP of numbered tiles or as a ready-to-install `.streamDeckProfile`
 
 ## 📁 Project Structure
 
@@ -135,10 +136,11 @@ src/
 ├── types/
 │   └── index.ts                      # Shared TypeScript interfaces
 └── utils/
-    ├── crop.ts                       # Crop filter & coordinate calculations
+    ├── crop.ts                       # Crop filter, trim args & coordinate calculations
     ├── device.ts                     # Device dimension calculations
     ├── filename.ts                   # Download filename generation
     ├── format.ts                     # File size formatting
+    ├── gifDuration.ts                # GIF duration parser with outlier detection
     └── progress.ts                   # Progress label formatting
 ```
 
