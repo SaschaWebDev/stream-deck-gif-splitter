@@ -69,6 +69,37 @@ describe('calculatePreviewTileSize', () => {
   });
 });
 
+// Custom grid preset: XL device with 6x3 grid (instead of native 8x4)
+const xlCustomGrid = { ...xl, cols: 6, rows: 3 };
+
+describe('custom grid preset calculations', () => {
+  it('calculates target width for custom grid XL (6 cols)', () => {
+    // 6 * 144 + 5 * 40 = 864 + 200 = 1064
+    expect(calculateTargetWidth(xlCustomGrid, true)).toBe(1064);
+    // 6 * 144 = 864
+    expect(calculateTargetWidth(xlCustomGrid, false)).toBe(864);
+  });
+
+  it('calculates target height for custom grid XL (3 rows)', () => {
+    // 3 * 144 + 2 * 40 = 432 + 80 = 512
+    expect(calculateTargetHeight(xlCustomGrid, true)).toBe(512);
+    // 3 * 144 = 432
+    expect(calculateTargetHeight(xlCustomGrid, false)).toBe(432);
+  });
+
+  it('preserves tile size and gap from base device', () => {
+    expect(calculateGap(xlCustomGrid, true)).toBe(40);
+    expect(calculateGap(xlCustomGrid, false)).toBe(0);
+    expect(calculatePreviewTileSize(xlCustomGrid)).toBe(72);
+  });
+
+  it('scales gap the same as the base device', () => {
+    // 40 * (72/144) = 20
+    expect(calculateScaledGap(xlCustomGrid, true)).toBe(20);
+    expect(calculateScaledGap(xlCustomGrid, false)).toBe(16);
+  });
+});
+
 describe('calculateScaledGap', () => {
   it('scales gap proportionally when cutoff is on', () => {
     // MK.2: 72px tile, gap 16, preview 72 → 16 * (72/72) = 16

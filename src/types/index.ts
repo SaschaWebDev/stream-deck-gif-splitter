@@ -36,15 +36,25 @@ export interface DeviceConfigProps {
   cutoffMode: boolean;
   customCropEnabled: boolean;
   customLoopEnabled: boolean;
+  customGridEnabled: boolean;
+  customCols: number;
+  customRows: number;
+  gridOffsetCol: number;
+  gridOffsetRow: number;
   targetWidth: number;
   targetHeight: number;
   preset: import('../constants/presets').Preset;
+  basePreset: import('../constants/presets').Preset;
   isCropping: boolean;
   isSplitting: boolean;
   onPresetChange: (index: number) => void;
   onCutoffToggle: (checked: boolean) => void;
   onCustomCropToggle: (checked: boolean) => void;
   onCustomLoopToggle: (checked: boolean) => void;
+  onCustomGridToggle: (checked: boolean) => void;
+  onCustomColsChange: (cols: number) => void;
+  onCustomRowsChange: (rows: number) => void;
+  onGridOffsetChange: (col: number, row: number) => void;
 }
 
 export interface CropPreviewProps {
@@ -78,6 +88,10 @@ export interface ResultsPanelProps {
   tilesReady: boolean;
   tileSyncKey: number;
   preset: import('../constants/presets').Preset;
+  basePreset: import('../constants/presets').Preset;
+  customGridEnabled: boolean;
+  gridOffsetCol: number;
+  gridOffsetRow: number;
   previewTileSize: number;
   scaledGap: number;
   zipping: boolean;

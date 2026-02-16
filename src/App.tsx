@@ -38,11 +38,22 @@ function App() {
     cutoffMode,
     setCutoffMode,
     preset,
+    basePreset,
     gap,
     targetWidth,
     targetHeight,
     previewTileSize,
     scaledGap,
+    customGridEnabled,
+    setCustomGridEnabled,
+    customCols,
+    setCustomCols,
+    customRows,
+    setCustomRows,
+    gridOffsetCol,
+    setGridOffsetCol,
+    gridOffsetRow,
+    setGridOffsetRow,
   } = useDeviceConfig();
 
   const {
@@ -100,6 +111,7 @@ function App() {
   const handlePresetChange = useCallback(async (newIndex: number) => {
     setPresetIndex(newIndex);
     setCutoffMode(true);
+    setCustomGridEnabled(false);
     const p = PRESETS[newIndex];
     const tw = p.cols * p.tileWidth + (p.cols - 1) * p.gap;
     const th = p.rows * p.tileHeight + (p.rows - 1) * p.gap;
@@ -111,7 +123,7 @@ function App() {
       const tr = trimRangeRef.current;
       await performCrop(file, tw, th, undefined, undefined, tr?.start, tr?.end);
     }
-  }, [file, setPresetIndex, setCutoffMode, clearResults, clearCroppedPreview, performCrop]);
+  }, [file, setPresetIndex, setCutoffMode, setCustomGridEnabled, clearResults, clearCroppedPreview, performCrop]);
 
   const handleCutoffToggle = useCallback(async (checked: boolean) => {
     setCutoffMode(checked);
@@ -171,17 +183,76 @@ function App() {
     }
   }, [file, targetWidth, targetHeight, clearResults, clearCroppedPreview, performCrop]);
 
+  const handleCustomGridToggle = useCallback(async (checked: boolean) => {
+    setCustomGridEnabled(checked);
+    setGridOffsetCol(0);
+    setGridOffsetRow(0);
+    if (!checked) {
+      // Revert to native grid dimensions and re-crop
+      const tw = basePreset.cols * basePreset.tileWidth + (cutoffMode ? (basePreset.cols - 1) * basePreset.gap : 0);
+      const th = basePreset.rows * basePreset.tileHeight + (cutoffMode ? (basePreset.rows - 1) * basePreset.gap : 0);
+      clearResults();
+      if (file) {
+        await clearCroppedPreview();
+        const tr = trimRangeRef.current;
+        await performCrop(file, tw, th, undefined, undefined, tr?.start, tr?.end);
+      }
+    } else {
+      // Initialize custom cols/rows to device native
+      setCustomCols(basePreset.cols);
+      setCustomRows(basePreset.rows);
+    }
+  }, [file, basePreset, cutoffMode, setCustomGridEnabled, setCustomCols, setCustomRows, setGridOffsetCol, setGridOffsetRow, clearResults, clearCroppedPreview, performCrop]);
+
+  const handleCustomColsChange = useCallback(async (cols: number) => {
+    setCustomCols(cols);
+    // Clamp offset so the area stays within bounds
+    const maxOff = basePreset.cols - cols;
+    if (gridOffsetCol > maxOff) setGridOffsetCol(Math.max(0, maxOff));
+    const tw = cols * basePreset.tileWidth + (cutoffMode ? (cols - 1) * basePreset.gap : 0);
+    const th = customRows * basePreset.tileHeight + (cutoffMode ? (customRows - 1) * basePreset.gap : 0);
+    clearResults();
+    if (file) {
+      await clearCroppedPreview();
+      const tr = trimRangeRef.current;
+      await performCrop(file, tw, th, undefined, undefined, tr?.start, tr?.end);
+    }
+  }, [file, basePreset, cutoffMode, customRows, gridOffsetCol, setCustomCols, setGridOffsetCol, clearResults, clearCroppedPreview, performCrop]);
+
+  const handleCustomRowsChange = useCallback(async (rows: number) => {
+    setCustomRows(rows);
+    // Clamp offset so the area stays within bounds
+    const maxOff = basePreset.rows - rows;
+    if (gridOffsetRow > maxOff) setGridOffsetRow(Math.max(0, maxOff));
+    const tw = customCols * basePreset.tileWidth + (cutoffMode ? (customCols - 1) * basePreset.gap : 0);
+    const th = rows * basePreset.tileHeight + (cutoffMode ? (rows - 1) * basePreset.gap : 0);
+    clearResults();
+    if (file) {
+      await clearCroppedPreview();
+      const tr = trimRangeRef.current;
+      await performCrop(file, tw, th, undefined, undefined, tr?.start, tr?.end);
+    }
+  }, [file, basePreset, cutoffMode, customCols, gridOffsetRow, setCustomRows, setGridOffsetRow, clearResults, clearCroppedPreview, performCrop]);
+
+  const handleGridOffsetChange = useCallback((col: number, row: number) => {
+    setGridOffsetCol(col);
+    setGridOffsetRow(row);
+  }, [setGridOffsetCol, setGridOffsetRow]);
+
   const handleClearFile = useCallback(async () => {
     await resetProcessor();
     clearUpload();
     setCustomCropEnabled(false);
     setCustomLoopEnabled(false);
+    setCustomGridEnabled(false);
+    setGridOffsetCol(0);
+    setGridOffsetRow(0);
     setTrimRange(null);
     trimRangeRef.current = null;
     setGifDuration(null);
     filmstripFrames.forEach((url) => URL.revokeObjectURL(url));
     setFilmstripFrames([]);
-  }, [resetProcessor, clearUpload, filmstripFrames]);
+  }, [resetProcessor, clearUpload, setCustomGridEnabled, setGridOffsetCol, setGridOffsetRow, filmstripFrames]);
 
   const handleSplit = useCallback(async () => {
     if (!file) return;
@@ -193,8 +264,13 @@ function App() {
   }, [file, results, cutoffMode, downloadZip]);
 
   const handleDownloadProfile = useCallback(() => {
-    if (file) downloadProfile(results, file, preset);
-  }, [file, results, preset, downloadProfile]);
+    if (!file) return;
+    // When custom grid is active, offset tile positions so the profile places them correctly on the full device
+    const offsetResults = customGridEnabled
+      ? results.map((r) => ({ ...r, col: r.col + gridOffsetCol, row: r.row + gridOffsetRow }))
+      : results;
+    downloadProfile(offsetResults, file, preset);
+  }, [file, results, preset, customGridEnabled, gridOffsetCol, gridOffsetRow, downloadProfile]);
 
   return (
     <div className='hw-page'>
@@ -239,15 +315,25 @@ function App() {
                 cutoffMode={cutoffMode}
                 customCropEnabled={customCropEnabled}
                 customLoopEnabled={customLoopEnabled}
+                customGridEnabled={customGridEnabled}
+                customCols={customCols}
+                customRows={customRows}
+                gridOffsetCol={gridOffsetCol}
+                gridOffsetRow={gridOffsetRow}
                 targetWidth={targetWidth}
                 targetHeight={targetHeight}
                 preset={preset}
+                basePreset={basePreset}
                 isCropping={isCropping}
                 isSplitting={isSplitting}
                 onPresetChange={handlePresetChange}
                 onCutoffToggle={handleCutoffToggle}
                 onCustomCropToggle={handleCustomCropToggle}
                 onCustomLoopToggle={handleCustomLoopToggle}
+                onCustomGridToggle={handleCustomGridToggle}
+                onCustomColsChange={handleCustomColsChange}
+                onCustomRowsChange={handleCustomRowsChange}
+                onGridOffsetChange={handleGridOffsetChange}
               />
 
               <CropPreview
@@ -283,6 +369,10 @@ function App() {
             tilesReady={tilesReady}
             tileSyncKey={tileSyncKey}
             preset={preset}
+            basePreset={basePreset}
+            customGridEnabled={customGridEnabled}
+            gridOffsetCol={gridOffsetCol}
+            gridOffsetRow={gridOffsetRow}
             previewTileSize={previewTileSize}
             scaledGap={scaledGap}
             zipping={zipping}

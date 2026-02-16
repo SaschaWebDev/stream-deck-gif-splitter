@@ -8,6 +8,10 @@ export function ResultsPanel({
   tilesReady,
   tileSyncKey,
   preset,
+  basePreset,
+  customGridEnabled,
+  gridOffsetCol,
+  gridOffsetRow,
   previewTileSize,
   scaledGap,
   zipping,
@@ -17,6 +21,11 @@ export function ResultsPanel({
   onDownloadZip,
   onDownloadProfile,
 }: ResultsPanelProps) {
+  // When custom grid is active and smaller, show the full device grid
+  const showFullDevice = customGridEnabled && (preset.cols < basePreset.cols || preset.rows < basePreset.rows);
+  const mockupCols = showFullDevice ? basePreset.cols : preset.cols;
+  const mockupRows = showFullDevice ? basePreset.rows : preset.rows;
+
   return (
     <div ref={resultsRef}>
       {file && croppedPreview && (isSplitting || results.length > 0) && (
@@ -28,7 +37,7 @@ export function ResultsPanel({
 
           {results.length > 0 && (
             <div className='hw-results-bar'>
-              <span className='hw-device-badge'>{preset.label}</span>
+              <span className='hw-device-badge'>{basePreset.label}</span>
               <div className='hw-results-buttons'>
                 <button
                   className='hw-download-button'
@@ -68,8 +77,8 @@ export function ResultsPanel({
                   className='hw-mockup-frame'
                   style={{
                     maxWidth:
-                      preset.cols * previewTileSize +
-                      (preset.cols - 1) * scaledGap +
+                      mockupCols * previewTileSize +
+                      (mockupCols - 1) * scaledGap +
                       48,
                   }}
                 >
@@ -83,23 +92,60 @@ export function ResultsPanel({
                   <div
                     className='hw-mockup-grid'
                     style={{
-                      gridTemplateColumns: `repeat(${preset.cols}, 1fr)`,
+                      gridTemplateColumns: `repeat(${mockupCols}, 1fr)`,
                       gap: `${scaledGap}px`,
                     }}
                   >
-                    {results.map((r) => (
-                      <div
-                        key={`${r.row}-${r.col}`}
-                        className='hw-tile-button'
-                      >
-                        <img
-                          key={tileSyncKey}
-                          src={r.url}
-                          alt={r.filename}
-                          onLoad={onTileLoad}
-                        />
-                      </div>
-                    ))}
+                    {Array.from({ length: mockupRows }, (_, r) =>
+                      Array.from({ length: mockupCols }, (_, c) => {
+                        if (showFullDevice) {
+                          const inCustomArea =
+                            c >= gridOffsetCol && c < gridOffsetCol + preset.cols &&
+                            r >= gridOffsetRow && r < gridOffsetRow + preset.rows;
+
+                          if (inCustomArea) {
+                            const tileCol = c - gridOffsetCol;
+                            const tileRow = r - gridOffsetRow;
+                            const tile = results.find(
+                              (t) => t.col === tileCol && t.row === tileRow,
+                            );
+                            if (tile) {
+                              return (
+                                <div key={`${r}-${c}`} className='hw-tile-button'>
+                                  <img
+                                    key={tileSyncKey}
+                                    src={tile.url}
+                                    alt={tile.filename}
+                                    onLoad={onTileLoad}
+                                  />
+                                </div>
+                              );
+                            }
+                          }
+
+                          return (
+                            <div
+                              key={`${r}-${c}`}
+                              className='hw-tile-button hw-tile-blank'
+                            />
+                          );
+                        }
+
+                        // Normal mode: render tiles sequentially
+                        const tile = results[r * mockupCols + c];
+                        if (!tile) return <div key={`${r}-${c}`} className='hw-tile-button hw-tile-blank' />;
+                        return (
+                          <div key={`${r}-${c}`} className='hw-tile-button'>
+                            <img
+                              key={tileSyncKey}
+                              src={tile.url}
+                              alt={tile.filename}
+                              onLoad={onTileLoad}
+                            />
+                          </div>
+                        );
+                      }),
+                    )}
                   </div>
                 </div>
               </>
