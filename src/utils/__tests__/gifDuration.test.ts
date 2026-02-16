@@ -95,4 +95,36 @@ describe('parseGifDuration', () => {
     const duration = await parseGifDuration(bytesToFile(bytes));
     expect(duration).toBe(0);
   });
+
+  it('handles a single-frame GIF (no outlier possible)', async () => {
+    const bytes = buildGifBytes([50]);
+    const duration = await parseGifDuration(bytesToFile(bytes));
+    expect(duration).toBe(0.5);
+  });
+
+  it('replaces multiple outliers with the median', async () => {
+    // Median of [5, 5, 5, 5, 5000, 9999] = 5 (sorted idx 3)
+    // Threshold = max(50, 100) = 100
+    // 5000 and 9999 both replaced → 6 * 5cs = 30cs = 0.30s
+    const bytes = buildGifBytes([5, 5000, 5, 9999, 5, 5]);
+    const duration = await parseGifDuration(bytesToFile(bytes));
+    expect(duration).toBeCloseTo(0.3, 2);
+  });
+
+  it('treats all identical delays as valid (no outliers)', async () => {
+    // All same → median = 8, threshold = max(80, 100) = 100
+    // All 8 < 100 → no outliers. 10 * 8cs = 80cs = 0.8s
+    const bytes = buildGifBytes(Array(10).fill(8));
+    const duration = await parseGifDuration(bytesToFile(bytes));
+    expect(duration).toBeCloseTo(0.8, 2);
+  });
+
+  it('handles zero-delay frames (common in fast GIFs)', async () => {
+    // Zero delay means "as fast as possible", some GIFs use 0cs
+    // Median of [0,0,0,0] = 0, threshold = max(0,100) = 100
+    // All 0 ≤ 100 → no outliers. Total = 0
+    const bytes = buildGifBytes([0, 0, 0, 0]);
+    const duration = await parseGifDuration(bytesToFile(bytes));
+    expect(duration).toBe(0);
+  });
 });

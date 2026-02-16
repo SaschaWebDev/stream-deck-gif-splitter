@@ -81,6 +81,26 @@ describe('buildTrimArgs', () => {
     expect(result.pre).toEqual(['-ss', '0.000']);
     expect(result.out).toEqual(['-t', '2.500']);
   });
+
+  it('formats timestamps with 3 decimal places', () => {
+    const result = buildTrimArgs(0.1, 1);
+    expect(result.pre).toEqual(['-ss', '0.100']);
+    expect(result.out).toEqual(['-t', '0.900']);
+  });
+
+  it('handles very small trim range above zero', () => {
+    const result = buildTrimArgs(1.0, 1.1);
+    expect(result.pre).toEqual(['-ss', '1.000']);
+    expect(result.out).toEqual(['-t', '0.100']);
+  });
+
+  it('places -ss in pre and -t in out for correct FFmpeg positioning', () => {
+    const result = buildTrimArgs(2.0, 5.0);
+    // pre goes before -i (input seeking)
+    expect(result.pre[0]).toBe('-ss');
+    // out goes before output file (output duration limit)
+    expect(result.out[0]).toBe('-t');
+  });
 });
 
 describe('computeScaledDimensions', () => {
