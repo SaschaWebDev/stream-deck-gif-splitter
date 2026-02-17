@@ -82,6 +82,7 @@ function App() {
   const [gifDuration, setGifDuration] = useState<number | null>(null);
   const [filmstripFrames, setFilmstripFrames] = useState<string[]>([]);
   const trimRangeRef = useRef<{ start: number; end: number } | null>(null);
+  const cropOffsetRef = useRef<{ x: number; y: number } | null>(null);
 
   const syncedSrcs = useGifSync(preview, croppedPreview, isCropping, cropSyncKey);
   const resultsRef = useAutoScroll(isSplitting);
@@ -94,6 +95,7 @@ function App() {
     await resetProcessor();
     setTrimRange(null);
     trimRangeRef.current = null;
+    cropOffsetRef.current = null;
     setCustomLoopEnabled(false);
     filmstripFrames.forEach((url) => URL.revokeObjectURL(url));
     setFilmstripFrames([]);
@@ -112,6 +114,7 @@ function App() {
     setPresetIndex(newIndex);
     setCutoffMode(true);
     setCustomGridEnabled(false);
+    cropOffsetRef.current = null;
     const p = PRESETS[newIndex];
     const tw = p.cols * p.tileWidth + (p.cols - 1) * p.gap;
     const th = p.rows * p.tileHeight + (p.rows - 1) * p.gap;
@@ -127,6 +130,8 @@ function App() {
 
   const handleCutoffToggle = useCallback(async (checked: boolean) => {
     setCutoffMode(checked);
+    // Changing cutoff changes canvas size, so reset crop offset
+    cropOffsetRef.current = null;
     const tw = preset.cols * preset.tileWidth + (checked ? (preset.cols - 1) * preset.gap : 0);
     const th = preset.rows * preset.tileHeight + (checked ? (preset.rows - 1) * preset.gap : 0);
 
@@ -142,6 +147,7 @@ function App() {
   const handleCustomCropToggle = useCallback(async (checked: boolean) => {
     setCustomCropEnabled(checked);
     if (!checked) {
+      cropOffsetRef.current = null;
       clearResults();
       if (file) {
         await clearCroppedPreview();
@@ -152,6 +158,7 @@ function App() {
   }, [file, targetWidth, targetHeight, clearResults, clearCroppedPreview, performCrop]);
 
   const handleCropOffsetChange = useCallback(async (x: number, y: number) => {
+    cropOffsetRef.current = { x, y };
     clearResults();
     if (file) {
       await clearCroppedPreview();
@@ -168,7 +175,8 @@ function App() {
       clearResults();
       if (file) {
         await clearCroppedPreview();
-        await performCrop(file, targetWidth, targetHeight);
+        const co = cropOffsetRef.current;
+        await performCrop(file, targetWidth, targetHeight, co?.x, co?.y);
       }
     }
   }, [file, targetWidth, targetHeight, clearResults, clearCroppedPreview, performCrop]);
@@ -179,7 +187,8 @@ function App() {
     clearResults();
     if (file) {
       await clearCroppedPreview();
-      await performCrop(file, targetWidth, targetHeight, undefined, undefined, start, end);
+      const co = cropOffsetRef.current;
+      await performCrop(file, targetWidth, targetHeight, co?.x, co?.y, start, end);
     }
   }, [file, targetWidth, targetHeight, clearResults, clearCroppedPreview, performCrop]);
 
@@ -187,6 +196,8 @@ function App() {
     setCustomGridEnabled(checked);
     setGridOffsetCol(0);
     setGridOffsetRow(0);
+    // Changing grid dimensions changes canvas size, so reset crop offset
+    cropOffsetRef.current = null;
     if (!checked) {
       // Revert to native grid dimensions and re-crop
       const tw = basePreset.cols * basePreset.tileWidth + (cutoffMode ? (basePreset.cols - 1) * basePreset.gap : 0);
@@ -209,6 +220,8 @@ function App() {
     // Clamp offset so the area stays within bounds
     const maxOff = basePreset.cols - cols;
     if (gridOffsetCol > maxOff) setGridOffsetCol(Math.max(0, maxOff));
+    // Canvas size changed, reset crop offset
+    cropOffsetRef.current = null;
     const tw = cols * basePreset.tileWidth + (cutoffMode ? (cols - 1) * basePreset.gap : 0);
     const th = customRows * basePreset.tileHeight + (cutoffMode ? (customRows - 1) * basePreset.gap : 0);
     clearResults();
@@ -224,6 +237,8 @@ function App() {
     // Clamp offset so the area stays within bounds
     const maxOff = basePreset.rows - rows;
     if (gridOffsetRow > maxOff) setGridOffsetRow(Math.max(0, maxOff));
+    // Canvas size changed, reset crop offset
+    cropOffsetRef.current = null;
     const tw = customCols * basePreset.tileWidth + (cutoffMode ? (customCols - 1) * basePreset.gap : 0);
     const th = rows * basePreset.tileHeight + (cutoffMode ? (rows - 1) * basePreset.gap : 0);
     clearResults();
@@ -249,6 +264,7 @@ function App() {
     setGridOffsetRow(0);
     setTrimRange(null);
     trimRangeRef.current = null;
+    cropOffsetRef.current = null;
     setGifDuration(null);
     filmstripFrames.forEach((url) => URL.revokeObjectURL(url));
     setFilmstripFrames([]);

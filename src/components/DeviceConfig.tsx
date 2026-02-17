@@ -71,6 +71,7 @@ export function DeviceConfig({
           </span>
         </div>
 
+        <div className='hw-toggles-grid'>
         <div className='hw-cutoff-toggle'>
           <label className='hw-toggle-wrapper'>
             <input
@@ -238,6 +239,7 @@ export function DeviceConfig({
           <span className='hw-toggle-desc'>
             Trim the animation loop length.
           </span>
+        </div>
         </div>
       </div>
     </>

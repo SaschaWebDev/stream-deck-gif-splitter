@@ -115,6 +115,32 @@ function buildChildPageManifest(
     };
   }
 
+  // Ensure position 0,0 always has a backtoparent action — the Stream Deck
+  // software requires it for child profiles to render correctly.
+  if (!actions['0,0']) {
+    actions['0,0'] = {
+      ActionID: crypto.randomUUID(),
+      LinkedTitle: false,
+      Name: 'Back',
+      Settings: {},
+      State: 0,
+      States: [
+        {
+          FontFamily: '',
+          FontSize: 9,
+          FontStyle: '',
+          FontUnderline: false,
+          Image: '',
+          OutlineThickness: 2,
+          ShowTitle: false,
+          TitleAlignment: 'bottom',
+          TitleColor: '#ffffff',
+        },
+      ],
+      UUID: 'com.elgato.streamdeck.profile.backtoparent',
+    };
+  }
+
   return {
     Controllers: [
       {

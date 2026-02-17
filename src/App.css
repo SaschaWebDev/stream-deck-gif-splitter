@@ -567,6 +567,14 @@
   letter-spacing: 0.5px;
 }
 
+/* ---- Toggles 2×2 grid (desktop) ---- */
+.hw-toggles-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 24px;
+  width: 100%;
+}
+
 /* ---- Cutoff toggle (physical switch style) ---- */
 .hw-cutoff-toggle {
   display: flex;
@@ -1607,6 +1615,10 @@
   .hw-config-row {
     flex-direction: column;
     gap: 16px;
+  }
+
+  .hw-toggles-grid {
+    grid-template-columns: 1fr;
   }
 
   .hw-cutoff-toggle {
