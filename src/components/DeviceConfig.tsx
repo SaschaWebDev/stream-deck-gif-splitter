@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { PRESETS } from '../constants/presets';
 import type { DeviceConfigProps } from '../types';
 
@@ -29,6 +30,26 @@ export function DeviceConfig({
   const isCustomSmaller = customGridEnabled && (customCols < basePreset.cols || customRows < basePreset.rows);
   const maxOffsetCol = basePreset.cols - customCols;
   const maxOffsetRow = basePreset.rows - customRows;
+
+  // Local string state so mobile users can clear the field before typing a new value
+  const [colsInput, setColsInput] = useState(String(customCols));
+  const [rowsInput, setRowsInput] = useState(String(customRows));
+
+  // Sync local state when parent value changes (e.g. preset switch resets cols/rows)
+  useEffect(() => setColsInput(String(customCols)), [customCols]);
+  useEffect(() => setRowsInput(String(customRows)), [customRows]);
+
+  const commitCols = (raw: string) => {
+    const v = Math.max(1, Math.min(basePreset.cols, parseInt(raw) || 1));
+    setColsInput(String(v));
+    if (v !== customCols) onCustomColsChange(v);
+  };
+
+  const commitRows = (raw: string) => {
+    const v = Math.max(1, Math.min(basePreset.rows, parseInt(raw) || 1));
+    setRowsInput(String(v));
+    if (v !== customRows) onCustomRowsChange(v);
+  };
 
   return (
     <>
@@ -114,13 +135,13 @@ export function DeviceConfig({
                 <span className='hw-label'>Cols</span>
                 <input
                   type='number'
+                  inputMode='numeric'
                   min={1}
                   max={basePreset.cols}
-                  value={customCols}
-                  onChange={(e) => {
-                    const v = Math.max(1, Math.min(basePreset.cols, parseInt(e.target.value) || 1));
-                    onCustomColsChange(v);
-                  }}
+                  value={colsInput}
+                  onChange={(e) => setColsInput(e.target.value)}
+                  onBlur={(e) => commitCols(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') commitCols(colsInput); }}
                   disabled={isCropping || isSplitting}
                 />
               </label>
@@ -129,13 +150,13 @@ export function DeviceConfig({
                 <span className='hw-label'>Rows</span>
                 <input
                   type='number'
+                  inputMode='numeric'
                   min={1}
                   max={basePreset.rows}
-                  value={customRows}
-                  onChange={(e) => {
-                    const v = Math.max(1, Math.min(basePreset.rows, parseInt(e.target.value) || 1));
-                    onCustomRowsChange(v);
-                  }}
+                  value={rowsInput}
+                  onChange={(e) => setRowsInput(e.target.value)}
+                  onBlur={(e) => commitRows(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') commitRows(rowsInput); }}
                   disabled={isCropping || isSplitting}
                 />
               </label>
