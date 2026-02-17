@@ -23,7 +23,10 @@ export function UserManual() {
             We currently support the Stream Deck MK.2 (5×3), Stream Deck
             XL (8×4), Stream Deck Mini (3×2), Stream Deck + (4×2), and
             Stream Deck Neo (4×2). Each preset automatically adjusts the
-            crop dimensions and tile sizes to match the device.
+            crop dimensions and tile sizes to match the device. You can
+            also enable <strong>Custom Grid</strong> to use a smaller
+            sub-area of your device (e.g. a 6×3 region on your 8×4 XL)
+            and position it anywhere on the button layout.
           </p>
         </details>
         <details className='hw-faq-item'>
@@ -97,7 +100,14 @@ export function UserManual() {
             crop region and choose which area to keep instead of
             center-cropping. Enable <strong>Custom Loop</strong> to trim
             the animation length — drag the timeline handles to select
-            which portion of the GIF to keep.
+            which portion of the GIF to keep. Enable{' '}
+            <strong>Custom Grid</strong> to use fewer columns and rows
+            than the full device — set the grid size with the number
+            inputs, then use the arrow buttons to position the tile area
+            on your device. The output mockup shows the full device with
+            your tiles in place and unused slots blacked out. Both the
+            ZIP and .streamDeckProfile exports use the correct button
+            positions.
           </p>
         </details>
       </div>

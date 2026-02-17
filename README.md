@@ -28,6 +28,7 @@ All processing runs **100% client-side** using [FFmpeg.wasm](https://ffmpegwasm.
 - ✂️ **Cutoff mode** — Accounts for the physical gap between buttons so animations appear seamless
 - 🎯 **Custom crop position** — Drag the crop region to choose exactly which part of the GIF to keep, instead of always center-cropping
 - 🔁 **Custom loop trim** — Trim the animation loop length with a timeline scrubber to keep only the portion you want
+- 📐 **Custom grid size** — Use a smaller sub-area of your device (e.g. 6×3 on an 8×4 XL) and position it anywhere on the button layout
 - 🎨 **High-quality encoding** — Two-pass palette generation with Floyd-Steinberg dithering
 - 📦 **ZIP download** — Get all tiles in a numbered, ready-to-assign archive
 - 🗂️ **`.streamDeckProfile` export** — One-click installable profile with all tiles pre-assigned
@@ -97,10 +98,11 @@ npm run preview   # preview the production build locally
 ## ⚙️ How It Works
 
 1. 📤 **Upload** — Drop a GIF, click to browse, or search GIPHY for the perfect animation
-2. ✂️ **Crop** — The GIF is automatically cropped and scaled to match your selected device's total button area (including optional gap compensation). Enable **Custom Crop** to drag the crop region and choose which area to keep
-3. 🔁 **Trim** — Enable **Custom Loop** to shorten the animation loop. A filmstrip timeline shows snapshot frames at evenly-spaced intervals; drag the left/right handles to select the portion you want. Trimmed-out regions are shown with a striped overlay
-4. 🔪 **Split** — FFmpeg slices the cropped GIF into individual tile animations using two-pass encoding for optimal quality
-5. 💾 **Export** — Download as a ZIP of numbered tiles or as a ready-to-install `.streamDeckProfile`
+2. ⚙️ **Configure** — Select your device model. Optionally enable **Custom Grid** to target a smaller sub-area (e.g. 6×3 on an XL) and use the arrow controls to position it on the device
+3. ✂️ **Crop** — The GIF is automatically cropped and scaled to match the target grid area (including optional gap compensation). Enable **Custom Crop** to drag the crop region and choose which area to keep
+4. 🔁 **Trim** — Enable **Custom Loop** to shorten the animation loop. A filmstrip timeline shows snapshot frames at evenly-spaced intervals; drag the left/right handles to select the portion you want. Trimmed-out regions are shown with a striped overlay
+5. 🔪 **Split** — FFmpeg slices the cropped GIF into individual tile animations using two-pass encoding for optimal quality
+6. 💾 **Export** — Download as a ZIP of numbered tiles or as a ready-to-install `.streamDeckProfile`. With Custom Grid, the profile places tiles at the correct offset positions and the mockup shows the full device with unused slots blacked out
 
 ## 📁 Project Structure
 
