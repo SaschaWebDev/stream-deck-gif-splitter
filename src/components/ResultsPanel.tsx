@@ -94,7 +94,8 @@ export function ResultsPanel({
                     style={{
                       gridTemplateColumns: `repeat(${mockupCols}, 1fr)`,
                       gap: `${scaledGap}px`,
-                    }}
+                      '--grid-gap': `${scaledGap}px`,
+                    } as React.CSSProperties}
                   >
                     {Array.from({ length: mockupRows }, (_, r) =>
                       Array.from({ length: mockupCols }, (_, c) => {

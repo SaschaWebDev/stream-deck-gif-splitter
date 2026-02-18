@@ -723,12 +723,26 @@
 }
 
 .hw-grid-pos-control {
-  display: flex;
+  display: grid;
+  grid-template-areas:
+    '.    up    .'
+    'left mini  right'
+    '.    down  .';
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: auto 1fr auto;
+  justify-items: center;
   align-items: center;
-  gap: 12px;
+  gap: 4px;
+  width: fit-content;
 }
 
+.hw-grid-arrow-up    { grid-area: up; }
+.hw-grid-arrow-left  { grid-area: left; }
+.hw-grid-arrow-right { grid-area: right; }
+.hw-grid-arrow-down  { grid-area: down; }
+
 .hw-grid-pos-mini {
+  grid-area: mini;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -756,18 +770,6 @@
   background: #1e3a5f;
   border-color: #3b82f6;
   box-shadow: 0 0 4px rgba(59, 130, 246, 0.3);
-}
-
-.hw-grid-pos-arrows {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-
-.hw-grid-arrow-mid {
-  display: flex;
-  gap: 2px;
 }
 
 .hw-grid-arrow {
@@ -1667,6 +1669,15 @@
   .hw-mockup-frame {
     padding: 14px 16px 16px;
     border-radius: 12px;
+    max-width: none !important;
+  }
+
+  .hw-mockup-grid {
+    gap: min(var(--grid-gap), 2.5vw) !important;
+  }
+
+  .hw-tile-button {
+    border-radius: 6px;
   }
 
   .hw-file-preview {

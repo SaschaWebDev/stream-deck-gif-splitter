@@ -166,6 +166,22 @@ export function DeviceConfig({
             <div className='hw-grid-position'>
               <span className='hw-label'>Position</span>
               <div className='hw-grid-pos-control'>
+                <button
+                  className='hw-grid-arrow hw-grid-arrow-up'
+                  disabled={gridOffsetRow <= 0 || isCropping || isSplitting}
+                  onClick={() => onGridOffsetChange(gridOffsetCol, gridOffsetRow - 1)}
+                  aria-label='Move up'
+                >
+                  <svg width='12' height='12' viewBox='0 0 12 12' fill='currentColor'><path d='M6 2L1 8h10z'/></svg>
+                </button>
+                <button
+                  className='hw-grid-arrow hw-grid-arrow-left'
+                  disabled={gridOffsetCol <= 0 || isCropping || isSplitting}
+                  onClick={() => onGridOffsetChange(gridOffsetCol - 1, gridOffsetRow)}
+                  aria-label='Move left'
+                >
+                  <svg width='12' height='12' viewBox='0 0 12 12' fill='currentColor'><path d='M2 6l6-5v10z'/></svg>
+                </button>
                 <div className='hw-grid-pos-mini'>
                   {Array.from({ length: basePreset.rows }, (_, r) => (
                     <div key={r} className='hw-grid-pos-row'>
@@ -183,42 +199,22 @@ export function DeviceConfig({
                     </div>
                   ))}
                 </div>
-                <div className='hw-grid-pos-arrows'>
-                  <button
-                    className='hw-grid-arrow'
-                    disabled={gridOffsetRow <= 0 || isCropping || isSplitting}
-                    onClick={() => onGridOffsetChange(gridOffsetCol, gridOffsetRow - 1)}
-                    aria-label='Move up'
-                  >
-                    <svg width='12' height='12' viewBox='0 0 12 12' fill='currentColor'><path d='M6 2L1 8h10z'/></svg>
-                  </button>
-                  <div className='hw-grid-arrow-mid'>
-                    <button
-                      className='hw-grid-arrow'
-                      disabled={gridOffsetCol <= 0 || isCropping || isSplitting}
-                      onClick={() => onGridOffsetChange(gridOffsetCol - 1, gridOffsetRow)}
-                      aria-label='Move left'
-                    >
-                      <svg width='12' height='12' viewBox='0 0 12 12' fill='currentColor'><path d='M2 6l6-5v10z'/></svg>
-                    </button>
-                    <button
-                      className='hw-grid-arrow'
-                      disabled={gridOffsetCol >= maxOffsetCol || isCropping || isSplitting}
-                      onClick={() => onGridOffsetChange(gridOffsetCol + 1, gridOffsetRow)}
-                      aria-label='Move right'
-                    >
-                      <svg width='12' height='12' viewBox='0 0 12 12' fill='currentColor'><path d='M10 6L4 1v10z'/></svg>
-                    </button>
-                  </div>
-                  <button
-                    className='hw-grid-arrow'
-                    disabled={gridOffsetRow >= maxOffsetRow || isCropping || isSplitting}
-                    onClick={() => onGridOffsetChange(gridOffsetCol, gridOffsetRow + 1)}
-                    aria-label='Move down'
-                  >
-                    <svg width='12' height='12' viewBox='0 0 12 12' fill='currentColor'><path d='M6 10l5-6H1z'/></svg>
-                  </button>
-                </div>
+                <button
+                  className='hw-grid-arrow hw-grid-arrow-right'
+                  disabled={gridOffsetCol >= maxOffsetCol || isCropping || isSplitting}
+                  onClick={() => onGridOffsetChange(gridOffsetCol + 1, gridOffsetRow)}
+                  aria-label='Move right'
+                >
+                  <svg width='12' height='12' viewBox='0 0 12 12' fill='currentColor'><path d='M10 6L4 1v10z'/></svg>
+                </button>
+                <button
+                  className='hw-grid-arrow hw-grid-arrow-down'
+                  disabled={gridOffsetRow >= maxOffsetRow || isCropping || isSplitting}
+                  onClick={() => onGridOffsetChange(gridOffsetCol, gridOffsetRow + 1)}
+                  aria-label='Move down'
+                >
+                  <svg width='12' height='12' viewBox='0 0 12 12' fill='currentColor'><path d='M6 10l5-6H1z'/></svg>
+                </button>
               </div>
             </div>
           )}
