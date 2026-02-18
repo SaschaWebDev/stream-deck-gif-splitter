@@ -6,11 +6,11 @@ Split any animated GIF into perfectly sized tiles for your **Elgato Stream Deck*
 
 **✨ Turn any animated GIF into a seamless Stream Deck background — entirely in your browser. ✨**
 
-[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![Website](https://img.shields.io/website?url=https%3A%2F%2Fgif.saschaweb.dev&label=gif.saschaweb.dev)](https://gif.saschaweb.dev) [![Vitest](https://img.shields.io/badge/tested_with-Vitest-6e9f18.svg?logo=vitest&logoColor=white)](https://vitest.dev) [![React 19](https://img.shields.io/badge/React-19-61dafb.svg?logo=react&logoColor=white)](https://react.dev) [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178c6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org) [![Vite](https://img.shields.io/badge/Vite-7-646cff.svg?logo=vite&logoColor=white)](https://vite.dev) [![FFmpeg.wasm](https://img.shields.io/badge/FFmpeg.wasm-0.12-007808.svg?logo=ffmpeg&logoColor=white)](https://ffmpegwasm.netlify.app)
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![Website](https://img.shields.io/website?url=https%3A%2F%2Fstreamdeckgif.com&label=streamdeckgif.com)](https://streamdeckgif.com) [![Vitest](https://img.shields.io/badge/tested_with-Vitest-6e9f18.svg?logo=vitest&logoColor=white)](https://vitest.dev) [![React 19](https://img.shields.io/badge/React-19-61dafb.svg?logo=react&logoColor=white)](https://react.dev) [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178c6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org) [![Vite](https://img.shields.io/badge/Vite-7-646cff.svg?logo=vite&logoColor=white)](https://vite.dev) [![FFmpeg.wasm](https://img.shields.io/badge/FFmpeg.wasm-0.12-007808.svg?logo=ffmpeg&logoColor=white)](https://ffmpegwasm.netlify.app)
 
 <img src="https://github.com/SaschaWebDev/animated-stream-deck-background-gif-converter/raw/develop/docs/stream-deck-gif-splitter-showcase.gif" width="600" alt="Stream Deck GIF Splitter — animated background wallpaper tool for Elgato Stream Deck" />
 
-[🚀 - Try it live -](https://gif.saschaweb.dev) · [🐛 Report Bug](https://github.com/SaschaWebDev/animated-stream-deck-background-gif-converter/issues) · [💡 Request Feature](https://github.com/SaschaWebDev/animated-stream-deck-background-gif-converter/issues)
+[🚀 - Try it live -](https://streamdeckgif.com) · [🐛 Report Bug](https://github.com/SaschaWebDev/animated-stream-deck-background-gif-converter/issues) · [💡 Request Feature](https://github.com/SaschaWebDev/animated-stream-deck-background-gif-converter/issues)
 
 </div>
 
