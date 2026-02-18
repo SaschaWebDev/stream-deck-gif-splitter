@@ -1,7 +1,6 @@
 import type { GiphyGif } from '../types';
 
-// Yes for the sake of keeping this project mostly client-side, I'm exposing the free GIPHY API key here. Please don't abuse it. All you can do is make the API key get banned, there is nothing to gain here. Be nice.
-const API_KEY = '810aZcAg4yWXlSB8Z89WIQK5FjxrB8bA';
+const API_KEY = import.meta.env.VITE_GIPHY_API_KEY ?? '';
 const BASE = 'https://api.giphy.com/v1/gifs';
 const LIMIT = 20;
 
