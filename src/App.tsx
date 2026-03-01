@@ -103,10 +103,14 @@ function App() {
     setGifDuration(duration);
     await setFileWithPreview(f);
     await performCrop(f, targetWidth, targetHeight);
-    // Extract filmstrip frames after crop (FFmpeg is now loaded)
+    // Extract filmstrip frames after crop (non-critical — uses isolated FFmpeg instance)
     if (duration > 0) {
-      const frames = await extractFrames(f, duration, 7);
-      setFilmstripFrames(frames);
+      try {
+        const frames = await extractFrames(f, duration, 7);
+        setFilmstripFrames(frames);
+      } catch {
+        // Filmstrip extraction failed, continue without it
+      }
     }
   }, [resetProcessor, setFileWithPreview, performCrop, extractFrames, targetWidth, targetHeight, filmstripFrames]);
 

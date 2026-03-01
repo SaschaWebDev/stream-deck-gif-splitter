@@ -20,6 +20,26 @@ export interface SplitProgress {
 const CORE_VERSION = '0.12.10'
 const BASE_URL = `https://cdn.jsdelivr.net/npm/@ffmpeg/core@${CORE_VERSION}/dist/esm`
 
+// Cache blob URLs at module level so multiple FFmpeg instances reuse them (no redundant network fetches)
+let cachedBlobURLs: { coreURL: string; wasmURL: string } | null = null
+let blobURLPromise: Promise<{ coreURL: string; wasmURL: string }> | null = null
+
+async function getBlobURLs(): Promise<{ coreURL: string; wasmURL: string }> {
+  if (cachedBlobURLs) return cachedBlobURLs
+  if (blobURLPromise) return blobURLPromise
+
+  blobURLPromise = (async () => {
+    const urls = {
+      coreURL: await toBlobURL(`${BASE_URL}/ffmpeg-core.js`, 'text/javascript'),
+      wasmURL: await toBlobURL(`${BASE_URL}/ffmpeg-core.wasm`, 'application/wasm'),
+    }
+    cachedBlobURLs = urls
+    return urls
+  })()
+
+  return blobURLPromise
+}
+
 export function useFFmpeg() {
   const ffmpegRef = useRef<FFmpeg | null>(null)
   const loadedRef = useRef(false)
@@ -35,10 +55,8 @@ export function useFFmpeg() {
       setLoading(true)
       try {
         const ffmpeg = new FFmpeg()
-        await ffmpeg.load({
-          coreURL: await toBlobURL(`${BASE_URL}/ffmpeg-core.js`, 'text/javascript'),
-          wasmURL: await toBlobURL(`${BASE_URL}/ffmpeg-core.wasm`, 'application/wasm'),
-        })
+        const urls = await getBlobURLs()
+        await ffmpeg.load(urls)
         ffmpegRef.current = ffmpeg
         loadedRef.current = true
       } catch (e) {
@@ -65,17 +83,16 @@ export function useFFmpeg() {
     await ffmpeg.writeFile('input.gif', inputData)
 
     // Pass 1: Generate optimal palette from the scaled+cropped frames
-    const paletteCode = await ffmpeg.exec([
+    await ffmpeg.exec([
       ...trimPre,
       '-i', 'input.gif',
       '-vf', `${scaleCrop},palettegen=stats_mode=full`,
       ...trimOut,
       '-y', 'crop_palette.png',
     ])
-    if (paletteCode !== 0) throw new Error(`FFmpeg palette generation failed (exit code ${paletteCode})`)
 
     // Pass 2: Re-encode with the optimal palette using best dithering
-    const cropCode = await ffmpeg.exec([
+    await ffmpeg.exec([
       ...trimPre,
       '-i', 'input.gif',
       '-i', 'crop_palette.png',
@@ -83,7 +100,6 @@ export function useFFmpeg() {
       ...trimOut,
       '-y', 'cropped.gif',
     ])
-    if (cropCode !== 0) throw new Error(`FFmpeg crop failed (exit code ${cropCode})`)
 
     await ffmpeg.deleteFile('input.gif')
     await ffmpeg.deleteFile('crop_palette.png')
@@ -109,12 +125,11 @@ export function useFFmpeg() {
 
     // Generate palette from the full cropped gif for consistent colors across all tiles
     setProgress({ phase: 'palette', current: 0, total })
-    const paletteCode = await ffmpeg.exec([
+    await ffmpeg.exec([
       '-i', 'cropped.gif',
       '-vf', 'palettegen=stats_mode=full',
       '-y', 'palette.png',
     ])
-    if (paletteCode !== 0) throw new Error(`FFmpeg palette generation failed (exit code ${paletteCode})`)
 
     // Crop each cell with palette-based encoding
     const results: SplitResult[] = []
@@ -130,14 +145,13 @@ export function useFFmpeg() {
         const y = row * (cellHeight + gap)
         const outName = `out_${row}_${col}.gif`
 
-        const tileCode = await ffmpeg.exec([
+        await ffmpeg.exec([
           '-i', 'cropped.gif',
           '-i', 'palette.png',
           '-lavfi',
           `crop=${cellWidth}:${cellHeight}:${x}:${y} [x]; [x][1:v] paletteuse=dither=floyd_steinberg`,
           '-y', outName,
         ])
-        if (tileCode !== 0) throw new Error(`FFmpeg tile split failed for row ${row}, col ${col} (exit code ${tileCode})`)
 
         const data = await ffmpeg.readFile(outName)
         const part: BlobPart = typeof data === 'string' ? data : new Uint8Array(data)
@@ -162,41 +176,48 @@ export function useFFmpeg() {
     return results
   }, [])
 
-  /** Extract evenly-spaced snapshot frames from a GIF for filmstrip display. */
+  /** Extract evenly-spaced snapshot frames from a GIF for filmstrip display.
+   *  Uses a dedicated ephemeral FFmpeg instance to avoid corrupting the shared crop/split instance. */
   const extractFrames = useCallback(async (file: File, duration: number, count: number): Promise<string[]> => {
-    await ensureLoaded()
-    const ffmpeg = ffmpegRef.current!
+    // Create an isolated FFmpeg instance for filmstrip extraction
+    const filmstripFFmpeg = new FFmpeg()
+    const urls_blob = await getBlobURLs()
+    await filmstripFFmpeg.load(urls_blob)
 
-    const inputData = await fetchFile(file)
-    await ffmpeg.writeFile('filmstrip_input.gif', inputData)
+    try {
+      const inputData = await fetchFile(file)
+      await filmstripFFmpeg.writeFile('filmstrip_input.gif', inputData)
 
-    const urls: string[] = []
-    for (let i = 0; i < count; i++) {
-      const timestamp = (duration * (i + 0.5)) / count
-      const outName = `filmstrip_${i}.png`
+      const urls: string[] = []
+      for (let i = 0; i < count; i++) {
+        const timestamp = (duration * (i + 0.5)) / count
+        const outName = `filmstrip_${i}.png`
 
-      await ffmpeg.exec([
-        '-ss', timestamp.toFixed(3),
-        '-i', 'filmstrip_input.gif',
-        '-frames:v', '1',
-        '-vf', 'scale=-1:64:flags=lanczos',
-        '-y', outName,
-      ])
+        await filmstripFFmpeg.exec([
+          '-ss', timestamp.toFixed(3),
+          '-i', 'filmstrip_input.gif',
+          '-frames:v', '1',
+          '-vf', 'scale=-1:64:flags=lanczos',
+          '-y', outName,
+        ])
 
-      try {
-        const data = await ffmpeg.readFile(outName)
-        const part: BlobPart = typeof data === 'string' ? data : new Uint8Array(data)
-        const blob = new Blob([part], { type: 'image/png' })
-        urls.push(URL.createObjectURL(blob))
-        await ffmpeg.deleteFile(outName)
-      } catch {
-        // Frame extraction failed for this timestamp, skip
+        try {
+          const data = await filmstripFFmpeg.readFile(outName)
+          const part: BlobPart = typeof data === 'string' ? data : new Uint8Array(data)
+          const blob = new Blob([part], { type: 'image/png' })
+          urls.push(URL.createObjectURL(blob))
+          await filmstripFFmpeg.deleteFile(outName)
+        } catch {
+          // Frame extraction failed for this timestamp, skip
+        }
       }
-    }
 
-    await ffmpeg.deleteFile('filmstrip_input.gif')
-    return urls
-  }, [ensureLoaded])
+      await filmstripFFmpeg.deleteFile('filmstrip_input.gif')
+      return urls
+    } finally {
+      filmstripFFmpeg.terminate()
+    }
+  }, [])
 
   /** Remove the cropped.gif from the virtual FS. */
   const cleanup = useCallback(async () => {
