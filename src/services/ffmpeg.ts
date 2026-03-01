@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from 'react'
+import { useRef, useCallback, useState } from 'react'
 import { FFmpeg } from '@ffmpeg/ffmpeg'
 import { toBlobURL, fetchFile } from '@ffmpeg/util'
 import { buildScaleCropFilter, buildTrimArgs } from '../utils/crop'
@@ -22,25 +22,36 @@ const BASE_URL = `https://cdn.jsdelivr.net/npm/@ffmpeg/core@${CORE_VERSION}/dist
 
 export function useFFmpeg() {
   const ffmpegRef = useRef<FFmpeg | null>(null)
-  const [loaded, setLoaded] = useState(false)
+  const loadedRef = useRef(false)
+  const loadingPromiseRef = useRef<Promise<void> | null>(null)
   const [loading, setLoading] = useState(false)
   const [progress, setProgress] = useState<SplitProgress | null>(null)
 
   const ensureLoaded = useCallback(async () => {
-    if (ffmpegRef.current && loaded) return
-    setLoading(true)
+    if (loadedRef.current) return
+    if (loadingPromiseRef.current) return loadingPromiseRef.current
 
-    const ffmpeg = new FFmpeg()
-    ffmpegRef.current = ffmpeg
+    const promise = (async () => {
+      setLoading(true)
+      try {
+        const ffmpeg = new FFmpeg()
+        await ffmpeg.load({
+          coreURL: await toBlobURL(`${BASE_URL}/ffmpeg-core.js`, 'text/javascript'),
+          wasmURL: await toBlobURL(`${BASE_URL}/ffmpeg-core.wasm`, 'application/wasm'),
+        })
+        ffmpegRef.current = ffmpeg
+        loadedRef.current = true
+      } catch (e) {
+        loadingPromiseRef.current = null
+        throw e
+      } finally {
+        setLoading(false)
+      }
+    })()
 
-    await ffmpeg.load({
-      coreURL: await toBlobURL(`${BASE_URL}/ffmpeg-core.js`, 'text/javascript'),
-      wasmURL: await toBlobURL(`${BASE_URL}/ffmpeg-core.wasm`, 'application/wasm'),
-    })
-
-    setLoaded(true)
-    setLoading(false)
-  }, [loaded])
+    loadingPromiseRef.current = promise
+    return promise
+  }, [])
 
   /** Scale & crop the GIF to the given dimensions with high-quality two-pass palette. Optional cropX/cropY offset (default: center). Optional trimStart/trimEnd to trim temporal range. Returns a blob URL for preview. */
   const cropGif = useCallback(async (file: File, targetWidth: number, targetHeight: number, cropX?: number, cropY?: number, trimStart?: number, trimEnd?: number): Promise<string> => {
@@ -54,16 +65,17 @@ export function useFFmpeg() {
     await ffmpeg.writeFile('input.gif', inputData)
 
     // Pass 1: Generate optimal palette from the scaled+cropped frames
-    await ffmpeg.exec([
+    const paletteCode = await ffmpeg.exec([
       ...trimPre,
       '-i', 'input.gif',
       '-vf', `${scaleCrop},palettegen=stats_mode=full`,
       ...trimOut,
       '-y', 'crop_palette.png',
     ])
+    if (paletteCode !== 0) throw new Error(`FFmpeg palette generation failed (exit code ${paletteCode})`)
 
     // Pass 2: Re-encode with the optimal palette using best dithering
-    await ffmpeg.exec([
+    const cropCode = await ffmpeg.exec([
       ...trimPre,
       '-i', 'input.gif',
       '-i', 'crop_palette.png',
@@ -71,6 +83,7 @@ export function useFFmpeg() {
       ...trimOut,
       '-y', 'cropped.gif',
     ])
+    if (cropCode !== 0) throw new Error(`FFmpeg crop failed (exit code ${cropCode})`)
 
     await ffmpeg.deleteFile('input.gif')
     await ffmpeg.deleteFile('crop_palette.png')
@@ -96,11 +109,12 @@ export function useFFmpeg() {
 
     // Generate palette from the full cropped gif for consistent colors across all tiles
     setProgress({ phase: 'palette', current: 0, total })
-    await ffmpeg.exec([
+    const paletteCode = await ffmpeg.exec([
       '-i', 'cropped.gif',
       '-vf', 'palettegen=stats_mode=full',
       '-y', 'palette.png',
     ])
+    if (paletteCode !== 0) throw new Error(`FFmpeg palette generation failed (exit code ${paletteCode})`)
 
     // Crop each cell with palette-based encoding
     const results: SplitResult[] = []
@@ -116,13 +130,14 @@ export function useFFmpeg() {
         const y = row * (cellHeight + gap)
         const outName = `out_${row}_${col}.gif`
 
-        await ffmpeg.exec([
+        const tileCode = await ffmpeg.exec([
           '-i', 'cropped.gif',
           '-i', 'palette.png',
           '-lavfi',
           `crop=${cellWidth}:${cellHeight}:${x}:${y} [x]; [x][1:v] paletteuse=dither=floyd_steinberg`,
           '-y', outName,
         ])
+        if (tileCode !== 0) throw new Error(`FFmpeg tile split failed for row ${row}, col ${col} (exit code ${tileCode})`)
 
         const data = await ffmpeg.readFile(outName)
         const part: BlobPart = typeof data === 'string' ? data : new Uint8Array(data)
@@ -193,5 +208,5 @@ export function useFFmpeg() {
     setProgress(null)
   }, [])
 
-  return { loaded, loading, ensureLoaded, cropGif, splitGif, extractFrames, cleanup, progress, resetProgress }
+  return { loading, ensureLoaded, cropGif, splitGif, extractFrames, cleanup, progress, resetProgress }
 }
