@@ -1,8 +1,8 @@
 import { PRESETS } from '../presets';
 
 describe('PRESETS', () => {
-  it('has exactly 5 presets', () => {
-    expect(PRESETS).toHaveLength(5);
+  it('has exactly 6 presets', () => {
+    expect(PRESETS).toHaveLength(6);
   });
 
   it('all presets have required fields with positive values', () => {
@@ -30,9 +30,16 @@ describe('PRESETS', () => {
   });
 
   it('XL is 8x4', () => {
-    const xl = PRESETS.find((p) => p.label.includes('XL'));
+    const xl = PRESETS.find((p) => p.label === 'Stream Deck XL');
     expect(xl).toBeDefined();
     expect(xl!.cols).toBe(8);
     expect(xl!.rows).toBe(4);
+  });
+
+  it('+ XL is 9x4', () => {
+    const plusXl = PRESETS.find((p) => p.label === 'Stream Deck + XL');
+    expect(plusXl).toBeDefined();
+    expect(plusXl!.cols).toBe(9);
+    expect(plusXl!.rows).toBe(4);
   });
 });

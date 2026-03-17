@@ -54,4 +54,13 @@ export const PRESETS: Preset[] = [
     tileHeight: 72,
     gap: 16,
   },
+  {
+    label: 'Stream Deck + XL',
+    model: '20GBX9901',
+    cols: 9,
+    rows: 4,
+    tileWidth: 144,
+    tileHeight: 144,
+    gap: 40,
+  },
 ];

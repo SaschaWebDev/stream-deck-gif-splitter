@@ -1,6 +1,6 @@
 # Stream Deck GIF Splitter
 
-Split any animated GIF into perfectly sized tiles for your **Elgato Stream Deck** — including **Stream Deck MK.2**, **Stream Deck XL**, **Stream Deck Mini**, **Stream Deck +**, and **Stream Deck Neo**. Create seamless animated backgrounds and wallpapers that span your entire device, with gap-aware cutoff mode, custom crop, loop trimming, and one-click `.streamDeckProfile` export. Runs 100% in your browser — no uploads, no servers, no account needed.
+Split any animated GIF into perfectly sized tiles for your **Elgato Stream Deck** — including **Stream Deck MK.2**, **Stream Deck XL**, **Stream Deck Mini**, **Stream Deck +**, **Stream Deck Neo**, and **Stream Deck + XL**. Create seamless animated backgrounds and wallpapers that span your entire device, with gap-aware cutoff mode, custom crop, loop trimming, and one-click `.streamDeckProfile` export. Runs 100% in your browser — no uploads, no servers, no account needed.
 
 <div align="center">
 
@@ -18,7 +18,7 @@ Split any animated GIF into perfectly sized tiles for your **Elgato Stream Deck*
 
 - 🖱️ **Drag & drop** — Upload any GIF and see an instant cropped preview
 - 🔍 **GIPHY search** — Browse trending GIFs or search GIPHY directly from the app — no need to leave the page
-- 🎚️ **5 device presets** — Stream Deck MK.2, XL, Mini, +, and Neo
+- 🎚️ **6 device presets** — Stream Deck MK.2, XL, Mini, +, Neo, and + XL
 - ✂️ **Cutoff mode** — Accounts for the physical gap between buttons so animations appear seamless
 - 🎯 **Custom crop position** — Drag the crop region to choose exactly which part of the GIF to keep, instead of always center-cropping
 - 🔁 **Custom loop trim** — Trim the animation loop length with a timeline scrubber to keep only the portion you want
@@ -38,6 +38,7 @@ Split any animated GIF into perfectly sized tiles for your **Elgato Stream Deck*
 | Stream Deck Mini | 3 × 2 | 72 × 72 px   | 16 px      |
 | Stream Deck +    | 4 × 2 | 72 × 72 px   | 16 px      |
 | Stream Deck Neo  | 4 × 2 | 72 × 72 px   | 16 px      |
+| Stream Deck + XL | 9 × 4 | 144 × 144 px | 40 px      |
 
 ## 🚀 Getting Started
 

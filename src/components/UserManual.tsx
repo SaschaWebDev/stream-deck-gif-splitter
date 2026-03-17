@@ -21,8 +21,8 @@ export function UserManual() {
           <summary>Which Stream Deck models are supported?</summary>
           <p>
             We currently support the Stream Deck MK.2 (5×3), Stream Deck
-            XL (8×4), Stream Deck Mini (3×2), Stream Deck + (4×2), and
-            Stream Deck Neo (4×2). Each preset automatically adjusts the
+            XL (8×4), Stream Deck Mini (3×2), Stream Deck + (4×2),
+            Stream Deck Neo (4×2), and Stream Deck + XL (9×4). Each preset automatically adjusts the
             crop dimensions and tile sizes to match the device. You can
             also enable <strong>Custom Grid</strong> to use a smaller
             sub-area of your device (e.g. a 6×3 region on your 8×4 XL)
@@ -80,7 +80,8 @@ export function UserManual() {
           <summary>Can I use the LCD touchscreen area for GIFs?</summary>
           <p>
             Unfortunately, the LCD touchscreen strip (found on devices
-            like the Stream Deck +) does not support animated GIFs. Only
+            like the Stream Deck + and Stream Deck + XL) does not
+            support animated GIFs. Only
             the physical button positions can display animated
             backgrounds.
           </p>
