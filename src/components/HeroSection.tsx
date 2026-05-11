@@ -7,7 +7,7 @@ export function HeroSection() {
         alt='Stream Deck GIF Splitter'
       />
       <h1 className='hw-title'>
-        Split images & GIFs for
+        Split GIFs & images for
         <br /> your <span className='hw-title-accent'>Stream Deck</span>
       </h1>
       <p className='hw-subtitle'>
