@@ -1,10 +1,10 @@
-# Stream Deck GIF Splitter
+# Stream Deck GIF Splitter & Screensaver Maker
 
-Split any animated GIF into perfectly sized tiles for your **Elgato Stream Deck** — including **Stream Deck MK.2**, **Stream Deck XL**, **Stream Deck Mini**, **Stream Deck +**, **Stream Deck Neo**, and **Stream Deck + XL**. Create seamless animated backgrounds and wallpapers that span your entire device, with gap-aware cutoff mode, custom crop, loop trimming, and one-click `.streamDeckProfile` export. Runs 100% in your browser — no uploads, no servers, no account needed.
+Split any image or animated GIF into perfectly sized tiles for your **Elgato Stream Deck** — including **Stream Deck MK.2**, **Stream Deck XL**, **Stream Deck Mini**, **Stream Deck +**, **Stream Deck Neo**, and **Stream Deck + XL**. Create seamless animated backgrounds, wallpapers, and padded screensavers that span your entire device, with gap-aware cutoff mode, custom crop, loop trimming, and one-click `.streamDeckProfile` export. Runs 100% in your browser — no uploads, no servers, no account needed.
 
 <div align="center">
 
-**✨ Turn any animated GIF into a seamless Stream Deck background — entirely in your browser. ✨**
+**✨ Turn any image or GIF into a seamless Stream Deck background or screensaver — entirely in your browser. ✨**
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![Website](https://img.shields.io/website?url=https%3A%2F%2Fstreamdeckgif.com&label=streamdeckgif.com)](https://streamdeckgif.com) [![Vitest](https://img.shields.io/badge/tested_with-Vitest-6e9f18.svg?logo=vitest&logoColor=white)](https://vitest.dev) [![React 19](https://img.shields.io/badge/React-19-61dafb.svg?logo=react&logoColor=white)](https://react.dev) [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178c6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org) [![Vite](https://img.shields.io/badge/Vite-7-646cff.svg?logo=vite&logoColor=white)](https://vite.dev) [![FFmpeg.wasm](https://img.shields.io/badge/FFmpeg.wasm-0.12-007808.svg?logo=ffmpeg&logoColor=white)](https://ffmpegwasm.netlify.app)
 
@@ -16,8 +16,10 @@ Split any animated GIF into perfectly sized tiles for your **Elgato Stream Deck*
 
 ### 🔥 Key Features
 
-- 🖱️ **Drag & drop** — Upload any GIF and see an instant cropped preview
-- 🔍 **GIPHY search** — Browse trending GIFs or search GIPHY directly from the app — no need to leave the page
+- �️ **Image & GIF Support** — Upload animated GIFs or static images to process
+- 📺 **Screensaver Maker** — Toggle to Screensaver mode to generate perfectly padded images for your Stream Deck's screensaver feature
+- 🖱️ **Drag & drop** — Upload your file and see an instant cropped preview
+- � **GIPHY search** — Browse trending GIFs or search GIPHY directly from the app — no need to leave the page
 - 🎚️ **6 device presets** — Stream Deck MK.2, XL, Mini, +, Neo, and + XL
 - ✂️ **Cutoff mode** — Accounts for the physical gap between buttons so animations appear seamless
 - 🎯 **Custom crop position** — Drag the crop region to choose exactly which part of the GIF to keep, instead of always center-cropping
@@ -80,8 +82,8 @@ npm run preview   # preview the production build locally
 
 ## 🛠️ Tech Stack
 
-| Layer                 | Technology                                                                                  |
-| --------------------- | ------------------------------------------------------------------------------------------- |
+| Layer                | Technology                                                                                  |
+| -------------------- | ------------------------------------------------------------------------------------------- |
 | ⚛️ Framework          | [React 19](https://react.dev) with [React Compiler](https://react.dev/learn/react-compiler) |
 | 🟦 Language           | [TypeScript 5.9](https://www.typescriptlang.org)                                            |
 | ⚡ Bundler            | [Vite 7](https://vite.dev)                                                                  |
@@ -92,12 +94,12 @@ npm run preview   # preview the production build locally
 
 ## ⚙️ How It Works
 
-1. 📤 **Upload** — Drop a GIF, click to browse, or search GIPHY for the perfect animation
-2. ⚙️ **Configure** — Select your device model. Optionally enable **Custom Grid** to target a smaller sub-area (e.g. 6×3 on an XL) and use the arrow controls to position it on the device
-3. ✂️ **Crop** — The GIF is automatically cropped and scaled to match the target grid area (including optional gap compensation). Enable **Custom Crop** to drag the crop region and choose which area to keep
+1. 📤 **Upload** — Toggle between "GIF Splitter" or "Screensaver Maker" mode, then drop an image/GIF, click to browse, or search GIPHY
+2. ⚙️ **Configure** — Select your device model. In Splitter mode, optionally enable **Custom Grid** to target a smaller sub-area (e.g. 6×3 on an XL)
+3. ✂️ **Crop** — The file is automatically cropped and scaled to match the target grid area (including optional gap compensation in Splitter mode). Enable **Custom Crop** to drag the crop region and choose which area to keep
 4. 🔁 **Trim** — Enable **Custom Loop** to shorten the animation loop. A filmstrip timeline shows snapshot frames at evenly-spaced intervals; drag the left/right handles to select the portion you want. Trimmed-out regions are shown with a striped overlay
-5. 🔪 **Split** — FFmpeg slices the cropped GIF into individual tile animations using two-pass encoding for optimal quality
-6. 💾 **Export** — Download as a ZIP of numbered tiles or as a ready-to-install `.streamDeckProfile`. With Custom Grid, the profile places tiles at the correct offset positions and the mockup shows the full device with unused slots blacked out
+5. 🔪 **Process** — FFmpeg slices the cropped GIF into individual tile animations (or processes a padded screensaver) using two-pass encoding for optimal quality
+6. 💾 **Export** — Download as a ZIP of numbered tiles, a ready-to-install `.streamDeckProfile`, or a single padded Screensaver image
 
 ## 📁 Project Structure
 
@@ -115,6 +117,7 @@ src/
 │   ├── GiphyPicker.tsx              # GIPHY search, grid & GIF selection
 │   ├── HeroSection.tsx               # Landing hero banner
 │   ├── ResultsPanel.tsx              # Tile grid results & download buttons
+│   ├── ScreensaverPanel.tsx          # Padded screensaver output panel
 │   └── UserManual.tsx                # Inline usage instructions
 ├── constants/
 │   └── presets.ts                    # Device preset configurations
