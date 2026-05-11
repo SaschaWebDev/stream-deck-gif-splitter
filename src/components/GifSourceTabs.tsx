@@ -4,16 +4,17 @@ import { GiphyPicker } from './GiphyPicker';
 
 interface GifSourceTabsProps {
   hasFile: boolean;
+  appMode: 'splitter' | 'screensaver';
   children: ReactNode;
   onGifSelected: (file: File) => void;
 }
 
-export function GifSourceTabs({ hasFile, children, onGifSelected }: GifSourceTabsProps) {
+export function GifSourceTabs({ hasFile, appMode, children, onGifSelected }: GifSourceTabsProps) {
   const [activeTab, setActiveTab] = useState<'upload' | 'giphy'>('upload');
 
   return (
     <div className='hw-source-tabs-wrapper'>
-      {!hasFile && (
+      {!hasFile && appMode === 'splitter' && (
         <div className='hw-source-toggle-track'>
           <div
             className={`hw-source-toggle-thumb${activeTab === 'giphy' ? ' hw-source-toggle-right' : ''}`}
@@ -39,7 +40,7 @@ export function GifSourceTabs({ hasFile, children, onGifSelected }: GifSourceTab
         </div>
       )}
 
-      {hasFile || activeTab === 'upload' ? (
+      {hasFile || appMode === 'screensaver' || activeTab === 'upload' ? (
         children
       ) : (
         <section className='hw-drop-section'>

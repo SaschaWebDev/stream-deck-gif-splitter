@@ -3,6 +3,9 @@ import type { CropPreviewProps } from '../types';
 import { computeScaledDimensions } from '../utils/crop';
 
 export function CropPreview({
+  appMode,
+  preset,
+  file,
   preview,
   croppedPreview,
   isCropping,
@@ -226,7 +229,38 @@ export function CropPreview({
                       onPointerDown={handlePointerDown}
                       onPointerMove={handlePointerMove}
                       onPointerUp={handlePointerUp}
-                    />
+                    >
+                      {appMode === 'screensaver' && (
+                        <div style={{
+                          position: 'absolute',
+                          top: 0, left: 0, right: 0, bottom: 0,
+                          pointerEvents: 'none',
+                        }}>
+                          {Array.from({ length: preset.cols - 1 }).map((_, i) => (
+                            <div key={`col-${i}`} style={{
+                              position: 'absolute',
+                              top: 0,
+                              bottom: 0,
+                              left: `${((i + 1) / preset.cols) * 100}%`,
+                              width: '2px',
+                              backgroundColor: 'rgba(255,255,255,0.5)',
+                              transform: 'translateX(-50%)',
+                            }} />
+                          ))}
+                          {Array.from({ length: preset.rows - 1 }).map((_, i) => (
+                            <div key={`row-${i}`} style={{
+                              position: 'absolute',
+                              left: 0,
+                              right: 0,
+                              top: `${((i + 1) / preset.rows) * 100}%`,
+                              height: '2px',
+                              backgroundColor: 'rgba(255,255,255,0.5)',
+                              transform: 'translateY(-50%)',
+                            }} />
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </>
                 )}
               </div>
@@ -351,12 +385,44 @@ export function CropPreview({
           </span>
           <div className='hw-crop-viewport'>
             {syncedSrcs ? (
-              <img
-                ref={cropRef}
-                key={`crop-${cropSyncKey}`}
-                src={syncedSrcs.crop}
-                alt='Cropped'
-              />
+              <div style={{ position: 'relative', display: 'inline-block', lineHeight: 0 }}>
+                <img
+                  ref={cropRef}
+                  key={`crop-${cropSyncKey}`}
+                  src={syncedSrcs.crop}
+                  alt='Cropped'
+                />
+                {appMode === 'screensaver' && (
+                  <div style={{
+                    position: 'absolute',
+                    top: 0, left: 0, right: 0, bottom: 0,
+                    pointerEvents: 'none',
+                  }}>
+                    {Array.from({ length: preset.cols - 1 }).map((_, i) => (
+                      <div key={`col-${i}`} style={{
+                        position: 'absolute',
+                        top: 0,
+                        bottom: 0,
+                        left: `${((i + 1) / preset.cols) * 100}%`,
+                        width: '2px',
+                        backgroundColor: '#000',
+                        transform: 'translateX(-50%)',
+                      }} />
+                    ))}
+                    {Array.from({ length: preset.rows - 1 }).map((_, i) => (
+                      <div key={`row-${i}`} style={{
+                        position: 'absolute',
+                        left: 0,
+                        right: 0,
+                        top: `${((i + 1) / preset.rows) * 100}%`,
+                        height: '2px',
+                        backgroundColor: '#000',
+                        transform: 'translateY(-50%)',
+                      }} />
+                    ))}
+                  </div>
+                )}
+              </div>
             ) : isCropping ? (
               <div className='hw-crop-loading hw-crop-active'>
                 {loading ? 'Loading ffmpeg' : 'Cropping'}
@@ -397,7 +463,7 @@ export function CropPreview({
                 background: isSplitting ? '#3b82f6' : '#22c55e',
               }}
             />
-            {isSplitting ? progressLabel : 'SPLIT GIF'}
+            {isSplitting ? progressLabel : (appMode === 'screensaver' ? 'GENERATE SCREENSAVER' : (file?.type === 'image/gif' ? 'SPLIT GIF' : 'SPLIT IMAGE'))}
           </button>
           {error && !isCropping && (
             <button

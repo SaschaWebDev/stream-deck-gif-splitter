@@ -1,4 +1,7 @@
-import { encodePageFolder } from '../streamDeckProfile';
+import { encodePageFolder, generateStreamDeckProfile } from '../streamDeckProfile';
+import type { SplitResult } from '../ffmpeg';
+import JSZip from 'jszip';
+import { vi, describe, it, expect, beforeAll, afterAll } from 'vitest';
 
 describe('encodePageFolder', () => {
   it('produces a known output for a known UUID', () => {
@@ -38,5 +41,102 @@ describe('encodePageFolder', () => {
     const result1 = encodePageFolder(uuid);
     const result2 = encodePageFolder(uuid);
     expect(result1).toBe(result2);
+  });
+});
+
+describe('generateStreamDeckProfile', () => {
+  let originalCrypto: Crypto;
+
+  beforeAll(() => {
+    originalCrypto = globalThis.crypto;
+    Object.defineProperty(globalThis, 'crypto', {
+      value: {
+        randomUUID: vi.fn(() => '12345678-1234-1234-1234-123456789abc')
+      }
+    });
+  });
+
+  afterAll(() => {
+    Object.defineProperty(globalThis, 'crypto', {
+      value: originalCrypto
+    });
+  });
+
+  it('generates a valid stream deck profile zip', async () => {
+    const results: SplitResult[] = [
+      { col: 1, row: 1, blob: new Blob(['gif data']), url: 'blob:url' },
+    ];
+    
+    const profileBlob = await generateStreamDeckProfile(results, 'Test Profile', '20GAA9901');
+    expect(profileBlob).toBeInstanceOf(Blob);
+
+    const zip = await JSZip.loadAsync(profileBlob);
+    
+    // There should be a root folder like 12345678-1234-1234-1234-123456789ABC.sdProfile
+    const rootFolderName = '12345678-1234-1234-1234-123456789ABC.sdProfile/';
+    expect(zip.files[rootFolderName]).toBeDefined();
+
+    // Check manifest.json inside root
+    const rootManifestContent = await zip.file(`${rootFolderName}manifest.json`)?.async('string');
+    expect(rootManifestContent).toBeDefined();
+    const rootManifest = JSON.parse(rootManifestContent!);
+    expect(rootManifest.Name).toBe('Test Profile');
+    expect(rootManifest.Device.Model).toBe('20GAA9901');
+    expect(rootManifest.Pages.Current).toBe('12345678-1234-1234-1234-123456789abc');
+
+    // parent folder name based on UUID
+    const parentFolderName = encodePageFolder('12345678-1234-1234-1234-123456789abc');
+    const childFolderName = encodePageFolder('12345678-1234-1234-1234-123456789abc'); // because randomUUID is mocked to always return same
+
+    // Check parent manifest
+    const parentManifestContent = await zip.file(`${rootFolderName}Profiles/${parentFolderName}/manifest.json`)?.async('string');
+    expect(parentManifestContent).toBeDefined();
+    const parentManifest = JSON.parse(parentManifestContent!);
+    expect(parentManifest.Controllers[0].Actions['0,0'].UUID).toBe('com.elgato.streamdeck.profile.openchild');
+
+    // Check child manifest
+    const childManifestContent = await zip.file(`${rootFolderName}Profiles/${childFolderName}/manifest.json`)?.async('string');
+    expect(childManifestContent).toBeDefined();
+    
+    const childManifest = JSON.parse(childManifestContent!);
+    expect(childManifest.Name).toBe('Test Profile');
+    expect(childManifest.Controllers[0].Actions['1,1'].States[0].Image).toBe('Images/tile_1_1.gif');
+    
+    // Ensure back button is populated at 0,0
+    expect(childManifest.Controllers[0].Actions['0,0'].UUID).toBe('com.elgato.streamdeck.profile.backtoparent');
+    expect(childManifest.Controllers[0].Actions['0,0'].States[0].Image).toBe('');
+    
+    // Check that images are present
+    const imageContent = await zip.file(`${rootFolderName}Profiles/${childFolderName}/Images/tile_1_1.gif`)?.async('string');
+    expect(imageContent).toBe('gif data');
+  });
+  
+  it('does not overwrite existing 0,0 action if tile is present at 0,0', async () => {
+    let callCount = 0;
+    Object.defineProperty(globalThis, 'crypto', {
+      value: {
+        randomUUID: vi.fn(() => `12345678-1234-1234-1234-123456789ab${callCount++}`)
+      }
+    });
+
+    const results: SplitResult[] = [
+      { col: 0, row: 0, blob: new Blob(['0,0 gif']), url: 'blob:url' },
+    ];
+    
+    const profileBlob = await generateStreamDeckProfile(results, 'Test', '10GAA9901');
+    const zip = await JSZip.loadAsync(profileBlob);
+    
+    const rootFolder = Object.keys(zip.files).find(name => name.endsWith('.sdProfile/')) || '';
+    const profiles = Object.keys(zip.files).filter(name => name.includes('Profiles/') && name.endsWith('manifest.json'));
+    
+    // Profiles are created for parent and child.
+    // the root one is `12345678-1234-1234-1234-123456789ABC.sdProfile/manifest.json`
+    // and there are two in Profiles/
+    const childManifestPath = profiles[1]; // child is generated second, or just find the one that has Name="Test"
+    
+    const childManifestContent = await zip.file(childManifestPath)?.async('string');
+    const childManifest = JSON.parse(childManifestContent!);
+    
+    expect(childManifest.Controllers[0].Actions['0,0'].States[0].Image).toBe('Images/tile_0_0.gif');
   });
 });

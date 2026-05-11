@@ -134,7 +134,9 @@ export function useFFmpeg() {
     // Crop each cell with palette-based encoding
     const results: SplitResult[] = []
     let count = 0
-    const baseName = filename.replace(/\.gif$/i, '')
+    const isGif = filename.toLowerCase().endsWith('.gif')
+    const outExt = isGif ? 'gif' : 'png'
+    const baseName = filename.replace(/\.(gif|png|jpe?g|webp)$/i, '')
 
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
@@ -143,7 +145,7 @@ export function useFFmpeg() {
 
         const x = col * (cellWidth + gap)
         const y = row * (cellHeight + gap)
-        const outName = `out_${row}_${col}.gif`
+        const outName = `out_${row}_${col}.${outExt}`
 
         await ffmpeg.exec([
           '-i', 'cropped.gif',
@@ -155,7 +157,7 @@ export function useFFmpeg() {
 
         const data = await ffmpeg.readFile(outName)
         const part: BlobPart = typeof data === 'string' ? data : new Uint8Array(data)
-        const blob = new Blob([part], { type: 'image/gif' })
+        const blob = new Blob([part], { type: `image/${outExt}` })
         const url = URL.createObjectURL(blob)
 
         results.push({
@@ -163,7 +165,7 @@ export function useFFmpeg() {
           col,
           blob,
           url,
-          filename: `${baseName}_${count}.gif`,
+          filename: `${baseName}_${count}.${outExt}`,
         })
 
         await ffmpeg.deleteFile(outName)
@@ -174,6 +176,90 @@ export function useFFmpeg() {
 
     setProgress({ phase: 'done', current: total, total })
     return results
+  }, [])
+
+  /** Generate a single padded screensaver image by splitting the cropped file and xstacking with black gaps. */
+  const generateScreensaver = useCallback(async (
+    filename: string,
+    cols: number,
+    rows: number,
+    cellWidth: number,
+    cellHeight: number,
+    gap: number,
+  ): Promise<{ blob: Blob; url: string; filename: string }> => {
+    const ffmpeg = ffmpegRef.current!
+
+    const total = rows * cols
+
+    setProgress({ phase: 'palette', current: 0, total })
+
+    // Generate palette from the full cropped gif for consistent colors
+    await ffmpeg.exec([
+      '-i', 'cropped.gif',
+      '-vf', 'palettegen=stats_mode=full',
+      '-y', 'palette.png',
+    ])
+
+    setProgress({ phase: 'splitting', current: 1, total })
+
+    const filterComplex: string[] = []
+    let outIdx = 0
+
+    // Crop each tile assuming the input image has NO gaps
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const x = col * cellWidth
+        const y = row * cellHeight
+        filterComplex.push(`[0:v]crop=${cellWidth}:${cellHeight}:${x}:${y}[c${outIdx}];`)
+        outIdx++
+      }
+    }
+
+    // Stack them with gaps
+    let inputsStr = ''
+    for (let i = 0; i < total; i++) {
+      inputsStr += `[c${i}]`
+    }
+
+    const layoutParams: string[] = []
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const x = col * (cellWidth + gap)
+        const y = row * (cellHeight + gap)
+        layoutParams.push(`${x}_${y}`)
+      }
+    }
+
+    filterComplex.push(`${inputsStr}xstack=inputs=${total}:layout=${layoutParams.join('|')}:fill=black[stacked];`)
+    filterComplex.push(`[stacked][1:v]paletteuse=dither=floyd_steinberg[out]`)
+
+    const isGif = filename.toLowerCase().endsWith('.gif')
+    const outExt = isGif ? 'gif' : 'png'
+    const outName = `screensaver.${outExt}`
+
+    await ffmpeg.exec([
+      '-i', 'cropped.gif',
+      '-i', 'palette.png',
+      '-filter_complex', filterComplex.join(' '),
+      '-map', '[out]',
+      '-y', outName,
+    ])
+
+    const data = await ffmpeg.readFile(outName)
+    const part: BlobPart = typeof data === 'string' ? data : new Uint8Array(data)
+    const blob = new Blob([part], { type: `image/${outExt}` })
+    const url = URL.createObjectURL(blob)
+
+    await ffmpeg.deleteFile('palette.png')
+    await ffmpeg.deleteFile(outName)
+
+    setProgress({ phase: 'done', current: total, total })
+    
+    return {
+      blob,
+      url,
+      filename: filename.replace(/\.(gif|png|jpe?g|webp)$/i, `_screensaver.${outExt}`),
+    }
   }, [])
 
   /** Extract evenly-spaced snapshot frames from a GIF for filmstrip display.
@@ -229,5 +315,5 @@ export function useFFmpeg() {
     setProgress(null)
   }, [])
 
-  return { loading, ensureLoaded, cropGif, splitGif, extractFrames, cleanup, progress, resetProgress }
+  return { loading, ensureLoaded, cropGif, splitGif, generateScreensaver, extractFrames, cleanup, progress, resetProgress }
 }

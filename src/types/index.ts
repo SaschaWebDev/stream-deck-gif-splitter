@@ -18,6 +18,7 @@ export interface SyncedSrcs {
 }
 
 export interface FileDropZoneProps {
+  appMode: 'splitter' | 'screensaver';
   file: File | null;
   preview: string | null;
   cropSyncKey: number;
@@ -32,6 +33,7 @@ export interface FileDropZoneProps {
 }
 
 export interface DeviceConfigProps {
+  appMode: 'splitter' | 'screensaver';
   presetIndex: number;
   cutoffMode: boolean;
   customCropEnabled: boolean;
@@ -58,6 +60,9 @@ export interface DeviceConfigProps {
 }
 
 export interface CropPreviewProps {
+  appMode: 'splitter' | 'screensaver';
+  preset: import('../constants/presets').Preset;
+  file: File | null;
   preview: string | null;
   croppedPreview: string | null;
   isCropping: boolean;

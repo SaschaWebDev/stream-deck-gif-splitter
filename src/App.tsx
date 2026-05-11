@@ -14,6 +14,7 @@ import { GifSourceTabs } from './components/GifSourceTabs';
 import { DeviceConfig } from './components/DeviceConfig';
 import { CropPreview } from './components/CropPreview';
 import { ResultsPanel } from './components/ResultsPanel';
+import { ScreensaverPanel } from './components/ScreensaverPanel';
 import { UserManual } from './components/UserManual';
 import './App.css';
 
@@ -31,6 +32,15 @@ function App() {
     handleDrop,
     handleInputChange,
   } = useFileUpload();
+
+  const [customCropEnabled, setCustomCropEnabled] = useState(false);
+  const [customLoopEnabled, setCustomLoopEnabled] = useState(false);
+  const [trimRange, setTrimRange] = useState<{ start: number; end: number } | null>(null);
+  const [gifDuration, setGifDuration] = useState<number | null>(null);
+  const [filmstripFrames, setFilmstripFrames] = useState<string[]>([]);
+  const [appMode, setAppMode] = useState<'splitter' | 'screensaver'>('splitter');
+  const trimRangeRef = useRef<{ start: number; end: number } | null>(null);
+  const cropOffsetRef = useRef<{ x: number; y: number } | null>(null);
 
   const {
     presetIndex,
@@ -54,7 +64,7 @@ function App() {
     setGridOffsetCol,
     gridOffsetRow,
     setGridOffsetRow,
-  } = useDeviceConfig();
+  } = useDeviceConfig(appMode);
 
   const {
     croppedPreview,
@@ -62,6 +72,7 @@ function App() {
     results,
     tilesReady,
     error,
+    screensaverResult,
     cropSyncKey,
     tileSyncKey,
     loading,
@@ -69,6 +80,7 @@ function App() {
     progressLabel,
     performCrop,
     performSplit,
+    performGenerateScreensaver,
     extractFrames,
     handleTileLoad,
     resetProcessor,
@@ -76,22 +88,37 @@ function App() {
     clearCroppedPreview,
   } = useGifProcessor();
 
-  const [customCropEnabled, setCustomCropEnabled] = useState(false);
-  const [customLoopEnabled, setCustomLoopEnabled] = useState(false);
-  const [trimRange, setTrimRange] = useState<{ start: number; end: number } | null>(null);
-  const [gifDuration, setGifDuration] = useState<number | null>(null);
-  const [filmstripFrames, setFilmstripFrames] = useState<string[]>([]);
-  const trimRangeRef = useRef<{ start: number; end: number } | null>(null);
-  const cropOffsetRef = useRef<{ x: number; y: number } | null>(null);
-
   const syncedSrcs = useGifSync(preview, croppedPreview, isCropping, cropSyncKey);
   const resultsRef = useAutoScroll(isSplitting);
   const { zipping, zippingProfile, downloadZip, downloadProfile } = useDownload();
 
   // --- Coordination handlers ---
 
+  const handleClearFile = useCallback(async () => {
+    await resetProcessor();
+    clearUpload();
+    setCustomCropEnabled(false);
+    setCustomLoopEnabled(false);
+    setCustomGridEnabled(false);
+    setGridOffsetCol(0);
+    setGridOffsetRow(0);
+    setTrimRange(null);
+    trimRangeRef.current = null;
+    cropOffsetRef.current = null;
+    setGifDuration(null);
+    filmstripFrames.forEach((url) => URL.revokeObjectURL(url));
+    setFilmstripFrames([]);
+  }, [resetProcessor, clearUpload, setCustomGridEnabled, setGridOffsetCol, setGridOffsetRow, filmstripFrames]);
+
+  const handleAppModeChange = useCallback(async (newMode: 'splitter' | 'screensaver') => {
+    if (newMode === appMode) return;
+    setAppMode(newMode);
+    await handleClearFile();
+  }, [appMode, handleClearFile]);
+
   const handleFileUpload = useCallback(async (f: File) => {
-    if (f.type !== 'image/gif') return;
+    if (!f.type.startsWith('image/')) return;
+    if (appMode === 'splitter' && f.type !== 'image/gif') return;
     await resetProcessor();
     setTrimRange(null);
     trimRangeRef.current = null;
@@ -112,7 +139,7 @@ function App() {
         // Filmstrip extraction failed, continue without it
       }
     }
-  }, [resetProcessor, setFileWithPreview, performCrop, extractFrames, targetWidth, targetHeight, filmstripFrames]);
+  }, [resetProcessor, setFileWithPreview, performCrop, extractFrames, targetWidth, targetHeight, filmstripFrames, appMode]);
 
   const handlePresetChange = useCallback(async (newIndex: number) => {
     setPresetIndex(newIndex);
@@ -258,26 +285,14 @@ function App() {
     setGridOffsetRow(row);
   }, [setGridOffsetCol, setGridOffsetRow]);
 
-  const handleClearFile = useCallback(async () => {
-    await resetProcessor();
-    clearUpload();
-    setCustomCropEnabled(false);
-    setCustomLoopEnabled(false);
-    setCustomGridEnabled(false);
-    setGridOffsetCol(0);
-    setGridOffsetRow(0);
-    setTrimRange(null);
-    trimRangeRef.current = null;
-    cropOffsetRef.current = null;
-    setGifDuration(null);
-    filmstripFrames.forEach((url) => URL.revokeObjectURL(url));
-    setFilmstripFrames([]);
-  }, [resetProcessor, clearUpload, setCustomGridEnabled, setGridOffsetCol, setGridOffsetRow, filmstripFrames]);
-
   const handleSplit = useCallback(async () => {
     if (!file) return;
-    await performSplit(file, preset.cols, preset.rows, preset.tileWidth, preset.tileHeight, gap);
-  }, [file, preset, gap, performSplit]);
+    if (appMode === 'screensaver') {
+      await performGenerateScreensaver(file, preset.cols, preset.rows, preset.tileWidth, preset.tileHeight, preset.gap);
+    } else {
+      await performSplit(file, preset.cols, preset.rows, preset.tileWidth, preset.tileHeight, gap);
+    }
+  }, [file, appMode, preset, gap, performSplit, performGenerateScreensaver]);
 
   const handleDownloadZip = useCallback(() => {
     if (file) downloadZip(results, file, cutoffMode);
@@ -312,8 +327,27 @@ function App() {
         <main className='hw-lcd-screen'>
           <HeroSection />
 
-          <GifSourceTabs hasFile={!!file} onGifSelected={handleFileUpload}>
+          <div className='hw-source-toggle-track' style={{ margin: '0 0 20px' }}>
+            <div
+              className={`hw-source-toggle-thumb${appMode === 'screensaver' ? ' hw-source-toggle-right' : ''}`}
+            />
+            <button
+              className={`hw-source-toggle-label${appMode === 'splitter' ? ' active' : ''}`}
+              onClick={() => handleAppModeChange('splitter')}
+            >
+              Gif Splitter
+            </button>
+            <button
+              className={`hw-source-toggle-label${appMode === 'screensaver' ? ' active' : ''}`}
+              onClick={() => handleAppModeChange('screensaver')}
+            >
+              Screensaver Maker
+            </button>
+          </div>
+
+          <GifSourceTabs hasFile={!!file} appMode={appMode} onGifSelected={handleFileUpload}>
             <FileDropZone
+              appMode={appMode}
               file={file}
               preview={preview}
               cropSyncKey={cropSyncKey}
@@ -331,6 +365,7 @@ function App() {
           {file && (
             <section className='hw-screen-panel hw-config-panel'>
               <DeviceConfig
+                appMode={appMode}
                 presetIndex={presetIndex}
                 cutoffMode={cutoffMode}
                 customCropEnabled={customCropEnabled}
@@ -357,6 +392,9 @@ function App() {
               />
 
               <CropPreview
+                appMode={appMode}
+                preset={preset}
+                file={file}
                 preview={preview}
                 croppedPreview={croppedPreview}
                 isCropping={isCropping}
@@ -381,27 +419,35 @@ function App() {
             </section>
           )}
 
-          <ResultsPanel
-            file={file}
-            croppedPreview={croppedPreview}
-            isSplitting={isSplitting}
-            results={results}
-            tilesReady={tilesReady}
-            tileSyncKey={tileSyncKey}
-            preset={preset}
-            basePreset={basePreset}
-            customGridEnabled={customGridEnabled}
-            gridOffsetCol={gridOffsetCol}
-            gridOffsetRow={gridOffsetRow}
-            previewTileSize={previewTileSize}
-            scaledGap={scaledGap}
-            zipping={zipping}
-            zippingProfile={zippingProfile}
-            resultsRef={resultsRef}
-            onTileLoad={handleTileLoad}
-            onDownloadZip={handleDownloadZip}
-            onDownloadProfile={handleDownloadProfile}
-          />
+          {appMode === 'splitter' ? (
+            <ResultsPanel
+              file={file}
+              croppedPreview={croppedPreview}
+              isSplitting={isSplitting}
+              results={results}
+              tilesReady={tilesReady}
+              tileSyncKey={tileSyncKey}
+              preset={preset}
+              basePreset={basePreset}
+              customGridEnabled={customGridEnabled}
+              gridOffsetCol={gridOffsetCol}
+              gridOffsetRow={gridOffsetRow}
+              previewTileSize={previewTileSize}
+              scaledGap={scaledGap}
+              zipping={zipping}
+              zippingProfile={zippingProfile}
+              resultsRef={resultsRef}
+              onTileLoad={handleTileLoad}
+              onDownloadZip={handleDownloadZip}
+              onDownloadProfile={handleDownloadProfile}
+            />
+          ) : (
+            <ScreensaverPanel
+              screensaverResult={screensaverResult}
+              isSplitting={isSplitting}
+              resultsRef={resultsRef}
+            />
+          )}
 
           <UserManual />
         </main>
