@@ -49,11 +49,6 @@ describe('generateStreamDeckProfile', () => {
 
   beforeAll(() => {
     originalCrypto = globalThis.crypto;
-    Object.defineProperty(globalThis, 'crypto', {
-      value: {
-        randomUUID: vi.fn(() => '12345678-1234-1234-1234-123456789abc')
-      }
-    });
   });
 
   afterAll(() => {
@@ -63,6 +58,13 @@ describe('generateStreamDeckProfile', () => {
   });
 
   it('generates a valid stream deck profile zip', async () => {
+    let callCount = 0;
+    Object.defineProperty(globalThis, 'crypto', {
+      value: {
+        randomUUID: vi.fn(() => `12345678-1234-1234-1234-123456789ab${callCount++}`)
+      }
+    });
+
     const results: SplitResult[] = [
       { col: 1, row: 1, blob: new Blob(['gif data']), url: 'blob:url' },
     ];
@@ -70,10 +72,10 @@ describe('generateStreamDeckProfile', () => {
     const profileBlob = await generateStreamDeckProfile(results, 'Test Profile', '20GAA9901');
     expect(profileBlob).toBeInstanceOf(Blob);
 
-    const zip = await JSZip.loadAsync(profileBlob);
+    const zip = await JSZip.loadAsync(await profileBlob.arrayBuffer());
     
-    // There should be a root folder like 12345678-1234-1234-1234-123456789ABC.sdProfile
-    const rootFolderName = '12345678-1234-1234-1234-123456789ABC.sdProfile/';
+    // root is generated first (callCount 0)
+    const rootFolderName = '12345678-1234-1234-1234-123456789AB0.sdProfile/';
     expect(zip.files[rootFolderName]).toBeDefined();
 
     // Check manifest.json inside root
@@ -82,11 +84,13 @@ describe('generateStreamDeckProfile', () => {
     const rootManifest = JSON.parse(rootManifestContent!);
     expect(rootManifest.Name).toBe('Test Profile');
     expect(rootManifest.Device.Model).toBe('20GAA9901');
-    expect(rootManifest.Pages.Current).toBe('12345678-1234-1234-1234-123456789abc');
+    // parent is generated second (callCount 1)
+    expect(rootManifest.Pages.Current).toBe('12345678-1234-1234-1234-123456789ab1');
 
     // parent folder name based on UUID
-    const parentFolderName = encodePageFolder('12345678-1234-1234-1234-123456789abc');
-    const childFolderName = encodePageFolder('12345678-1234-1234-1234-123456789abc'); // because randomUUID is mocked to always return same
+    const parentFolderName = encodePageFolder('12345678-1234-1234-1234-123456789ab1');
+    // child is generated third (callCount 2)
+    const childFolderName = encodePageFolder('12345678-1234-1234-1234-123456789ab2');
 
     // Check parent manifest
     const parentManifestContent = await zip.file(`${rootFolderName}Profiles/${parentFolderName}/manifest.json`)?.async('string');
@@ -124,7 +128,7 @@ describe('generateStreamDeckProfile', () => {
     ];
     
     const profileBlob = await generateStreamDeckProfile(results, 'Test', '10GAA9901');
-    const zip = await JSZip.loadAsync(profileBlob);
+    const zip = await JSZip.loadAsync(await profileBlob.arrayBuffer());
     
     const rootFolder = Object.keys(zip.files).find(name => name.endsWith('.sdProfile/')) || '';
     const profiles = Object.keys(zip.files).filter(name => name.includes('Profiles/') && name.endsWith('manifest.json'));

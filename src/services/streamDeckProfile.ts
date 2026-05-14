@@ -195,7 +195,8 @@ export async function generateStreamDeckProfile(
 
   const imagesFolder = childFolder.folder('Images')!;
   for (const tile of results) {
-    imagesFolder.file(`tile_${tile.col}_${tile.row}.gif`, tile.blob);
+    const arrayBuffer = await tile.blob.arrayBuffer();
+    imagesFolder.file(`tile_${tile.col}_${tile.row}.gif`, arrayBuffer);
   }
 
   return zip.generateAsync({ type: 'blob' });

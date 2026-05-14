@@ -4,7 +4,7 @@ Split any image or animated GIF into perfectly sized tiles for your **Elgato Str
 
 <div align="center">
 
-**✨ Turn any image or GIF into a seamless Stream Deck background or screensaver — entirely in your browser. ✨**
+**✨ Turn any GIF or image into a seamless Stream Deck background or screensaver — entirely in your browser. ✨**
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![Website](https://img.shields.io/website?url=https%3A%2F%2Fstreamdeckgif.com&label=streamdeckgif.com)](https://streamdeckgif.com) [![Vitest](https://img.shields.io/badge/tested_with-Vitest-6e9f18.svg?logo=vitest&logoColor=white)](https://vitest.dev) [![React 19](https://img.shields.io/badge/React-19-61dafb.svg?logo=react&logoColor=white)](https://react.dev) [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178c6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org) [![Vite](https://img.shields.io/badge/Vite-7-646cff.svg?logo=vite&logoColor=white)](https://vite.dev) [![FFmpeg.wasm](https://img.shields.io/badge/FFmpeg.wasm-0.12-007808.svg?logo=ffmpeg&logoColor=white)](https://ffmpegwasm.netlify.app)
 
@@ -16,7 +16,7 @@ Split any image or animated GIF into perfectly sized tiles for your **Elgato Str
 
 ### 🔥 Key Features
 
-- �️ **Image & GIF Support** — Upload animated GIFs or static images to process
+- �️ **GIF & Image Support** — Upload animated GIFs or static images to process
 - 📺 **Screensaver Maker** — Toggle to Screensaver mode to generate perfectly padded images for your Stream Deck's screensaver feature
 - 🖱️ **Drag & drop** — Upload your file and see an instant cropped preview
 - � **GIPHY search** — Browse trending GIFs or search GIPHY directly from the app — no need to leave the page
@@ -46,21 +46,20 @@ Split any image or animated GIF into perfectly sized tiles for your **Elgato Str
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org) 18+ (LTS recommended)
-- npm, yarn, or pnpm
+- [Bun](https://bun.sh) (>=1.0.0)
 
 ### 📥 Installation
 
 ```bash
 git clone https://github.com/SaschaWebDev/animated-stream-deck-background-gif-converter.git
 cd animated-stream-deck-background-gif-converter
-npm install
+bun install
 ```
 
 ### 💻 Development
 
 ```bash
-npm run dev
+bun run dev
 ```
 
 Open [http://localhost:5173](http://localhost:5173) in your browser.
@@ -68,16 +67,16 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 ### 🧪 Testing
 
 ```bash
-npm test              # run all tests once
-npm run test:watch    # run tests in watch mode
-npm run test:coverage # run tests with coverage report
+bun test              # run all tests once
+bun run test:watch    # run tests in watch mode
+bun run test:coverage # run tests with coverage report
 ```
 
 ### 📦 Build
 
 ```bash
-npm run build
-npm run preview   # preview the production build locally
+bun run build
+bun run preview   # preview the production build locally
 ```
 
 ## 🛠️ Tech Stack
