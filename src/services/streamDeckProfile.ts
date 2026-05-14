@@ -92,10 +92,12 @@ function buildChildPageManifest(
 
   for (const tile of tiles) {
     const key = `${tile.col},${tile.row}`;
+    const isTopLeft = key === '0,0';
+    
     actions[key] = {
       ActionID: crypto.randomUUID(),
       LinkedTitle: false,
-      Name: 'Back',
+      Name: isTopLeft ? 'Back' : 'GIF',
       Settings: {},
       State: 0,
       States: [
@@ -111,7 +113,7 @@ function buildChildPageManifest(
           TitleColor: '#ffffff',
         },
       ],
-      UUID: 'com.elgato.streamdeck.profile.backtoparent',
+      UUID: isTopLeft ? 'com.elgato.streamdeck.profile.backtoparent' : 'com.elgato.streamdeck.system.hotkey',
     };
   }
 
