@@ -16,6 +16,7 @@ import { CropPreview } from './components/CropPreview';
 import { ResultsPanel } from './components/ResultsPanel';
 import { ScreensaverPanel } from './components/ScreensaverPanel';
 import { UserManual } from './components/UserManual';
+import type { AppMode } from './types';
 import './App.css';
 
 function App() {
@@ -38,7 +39,7 @@ function App() {
   const [trimRange, setTrimRange] = useState<{ start: number; end: number } | null>(null);
   const [gifDuration, setGifDuration] = useState<number | null>(null);
   const [filmstripFrames, setFilmstripFrames] = useState<string[]>([]);
-  const [appMode, setAppMode] = useState<'splitter' | 'screensaver'>('splitter');
+  const [appMode, setAppMode] = useState<AppMode>('splitter');
   const trimRangeRef = useRef<{ start: number; end: number } | null>(null);
   const cropOffsetRef = useRef<{ x: number; y: number } | null>(null);
 
@@ -110,7 +111,7 @@ function App() {
     setFilmstripFrames([]);
   }, [resetProcessor, clearUpload, setCustomGridEnabled, setGridOffsetCol, setGridOffsetRow, filmstripFrames]);
 
-  const handleAppModeChange = useCallback(async (newMode: 'splitter' | 'screensaver') => {
+  const handleAppModeChange = useCallback(async (newMode: AppMode) => {
     if (newMode === appMode) return;
     setAppMode(newMode);
     await handleClearFile();
@@ -327,25 +328,25 @@ function App() {
         <main className='hw-lcd-screen'>
           <HeroSection />
 
-          <div className='hw-source-toggle-track' style={{ margin: '0 0 20px' }}>
+          <div className='hw-mode-toggle-track'>
             <div
-              className={`hw-source-toggle-thumb${appMode === 'screensaver' ? ' hw-source-toggle-right' : ''}`}
+              className={`hw-mode-toggle-thumb${appMode === 'screensaver' ? ' hw-mode-toggle-right' : ''}`}
             />
             <button
-              className={`hw-source-toggle-label${appMode === 'splitter' ? ' active' : ''}`}
+              className={`hw-mode-toggle-label${appMode === 'splitter' ? ' active' : ''}`}
               onClick={() => handleAppModeChange('splitter')}
             >
               Gif Splitter
             </button>
             <button
-              className={`hw-source-toggle-label${appMode === 'screensaver' ? ' active' : ''}`}
+              className={`hw-mode-toggle-label${appMode === 'screensaver' ? ' active' : ''}`}
               onClick={() => handleAppModeChange('screensaver')}
             >
               Screensaver Maker
             </button>
           </div>
 
-          <GifSourceTabs hasFile={!!file} appMode={appMode} onGifSelected={handleFileUpload}>
+          <GifSourceTabs hasFile={!!file} onGifSelected={handleFileUpload}>
             <FileDropZone
               appMode={appMode}
               file={file}

@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { PRESETS } from '../constants/presets';
+import type { AppMode } from '../types';
 import {
   calculateTargetWidth,
   calculateTargetHeight,
@@ -8,7 +9,7 @@ import {
   calculateScaledGap,
 } from '../utils/device';
 
-export function useDeviceConfig(appMode: 'splitter' | 'screensaver' = 'splitter') {
+export function useDeviceConfig(appMode: AppMode = 'splitter') {
   const [presetIndex, setPresetIndex] = useState(0);
   const [rawCutoffMode, setCutoffMode] = useState(true);
   const [customGridEnabled, setCustomGridEnabled] = useState(false);

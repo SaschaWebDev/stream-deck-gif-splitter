@@ -112,7 +112,7 @@ export function useFFmpeg() {
 
   /** Split the already-cropped GIF (still in the virtual FS) into a grid. */
   const splitGif = useCallback(async (
-    filename: string,
+    file: File,
     cols: number,
     rows: number,
     cellWidth: number,
@@ -134,9 +134,8 @@ export function useFFmpeg() {
     // Crop each cell with palette-based encoding
     const results: SplitResult[] = []
     let count = 0
-    const isGif = filename.toLowerCase().endsWith('.gif')
-    const outExt = isGif ? 'gif' : 'png'
-    const baseName = filename.replace(/\.(gif|png|jpe?g|webp)$/i, '')
+    const outExt = file.type === 'image/gif' ? 'gif' : 'png'
+    const baseName = file.name.replace(/\.[^.]+$/i, '')
 
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
@@ -180,7 +179,7 @@ export function useFFmpeg() {
 
   /** Generate a single padded screensaver image by splitting the cropped file and xstacking with black gaps. */
   const generateScreensaver = useCallback(async (
-    filename: string,
+    file: File,
     cols: number,
     rows: number,
     cellWidth: number,
@@ -233,8 +232,7 @@ export function useFFmpeg() {
     filterComplex.push(`${inputsStr}xstack=inputs=${total}:layout=${layoutParams.join('|')}:fill=black[stacked];`)
     filterComplex.push(`[stacked][1:v]paletteuse=dither=floyd_steinberg[out]`)
 
-    const isGif = filename.toLowerCase().endsWith('.gif')
-    const outExt = isGif ? 'gif' : 'png'
+    const outExt = file.type === 'image/gif' ? 'gif' : 'png'
     const outName = `screensaver.${outExt}`
 
     await ffmpeg.exec([
@@ -258,7 +256,7 @@ export function useFFmpeg() {
     return {
       blob,
       url,
-      filename: filename.replace(/\.(gif|png|jpe?g|webp)$/i, `_screensaver.${outExt}`),
+      filename: file.name.replace(/\.[^.]+$/i, '') + `_screensaver.${outExt}`,
     }
   }, [])
 

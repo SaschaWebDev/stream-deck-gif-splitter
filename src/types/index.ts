@@ -3,6 +3,8 @@ import type { RefObject } from 'react';
 export type { SplitResult, SplitProgress } from '../services/ffmpeg';
 export type { Preset } from '../constants/presets';
 
+export type AppMode = 'splitter' | 'screensaver';
+
 export interface GiphyGif {
   id: string;
   title: string;
@@ -18,7 +20,7 @@ export interface SyncedSrcs {
 }
 
 export interface FileDropZoneProps {
-  appMode: 'splitter' | 'screensaver';
+  appMode: AppMode;
   file: File | null;
   preview: string | null;
   cropSyncKey: number;
@@ -33,7 +35,7 @@ export interface FileDropZoneProps {
 }
 
 export interface DeviceConfigProps {
-  appMode: 'splitter' | 'screensaver';
+  appMode: AppMode;
   presetIndex: number;
   cutoffMode: boolean;
   customCropEnabled: boolean;
@@ -60,7 +62,7 @@ export interface DeviceConfigProps {
 }
 
 export interface CropPreviewProps {
-  appMode: 'splitter' | 'screensaver';
+  appMode: AppMode;
   preset: import('../constants/presets').Preset;
   file: File | null;
   preview: string | null;

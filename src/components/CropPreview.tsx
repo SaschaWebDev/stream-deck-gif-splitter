@@ -231,32 +231,20 @@ export function CropPreview({
                       onPointerUp={handlePointerUp}
                     >
                       {appMode === 'screensaver' && (
-                        <div style={{
-                          position: 'absolute',
-                          top: 0, left: 0, right: 0, bottom: 0,
-                          pointerEvents: 'none',
-                        }}>
+                        <div className='hw-bezel-overlay'>
                           {Array.from({ length: preset.cols - 1 }).map((_, i) => (
-                            <div key={`col-${i}`} style={{
-                              position: 'absolute',
-                              top: 0,
-                              bottom: 0,
-                              left: `${((i + 1) / preset.cols) * 100}%`,
-                              width: '2px',
-                              backgroundColor: 'rgba(255,255,255,0.5)',
-                              transform: 'translateX(-50%)',
-                            }} />
+                            <div
+                              key={`col-${i}`}
+                              className='hw-bezel-grid-line hw-bezel-grid-line--vertical hw-bezel-grid-line--white'
+                              style={{ left: `${((i + 1) / preset.cols) * 100}%` }}
+                            />
                           ))}
                           {Array.from({ length: preset.rows - 1 }).map((_, i) => (
-                            <div key={`row-${i}`} style={{
-                              position: 'absolute',
-                              left: 0,
-                              right: 0,
-                              top: `${((i + 1) / preset.rows) * 100}%`,
-                              height: '2px',
-                              backgroundColor: 'rgba(255,255,255,0.5)',
-                              transform: 'translateY(-50%)',
-                            }} />
+                            <div
+                              key={`row-${i}`}
+                              className='hw-bezel-grid-line hw-bezel-grid-line--horizontal hw-bezel-grid-line--white'
+                              style={{ top: `${((i + 1) / preset.rows) * 100}%` }}
+                            />
                           ))}
                         </div>
                       )}
@@ -385,7 +373,7 @@ export function CropPreview({
           </span>
           <div className='hw-crop-viewport'>
             {syncedSrcs ? (
-              <div style={{ position: 'relative', display: 'inline-block', lineHeight: 0 }}>
+              <div className='hw-cropped-wrapper'>
                 <img
                   ref={cropRef}
                   key={`crop-${cropSyncKey}`}
@@ -393,32 +381,20 @@ export function CropPreview({
                   alt='Cropped'
                 />
                 {appMode === 'screensaver' && (
-                  <div style={{
-                    position: 'absolute',
-                    top: 0, left: 0, right: 0, bottom: 0,
-                    pointerEvents: 'none',
-                  }}>
+                  <div className='hw-bezel-overlay'>
                     {Array.from({ length: preset.cols - 1 }).map((_, i) => (
-                      <div key={`col-${i}`} style={{
-                        position: 'absolute',
-                        top: 0,
-                        bottom: 0,
-                        left: `${((i + 1) / preset.cols) * 100}%`,
-                        width: '2px',
-                        backgroundColor: '#000',
-                        transform: 'translateX(-50%)',
-                      }} />
+                      <div
+                        key={`col-${i}`}
+                        className='hw-bezel-grid-line hw-bezel-grid-line--vertical hw-bezel-grid-line--black'
+                        style={{ left: `${((i + 1) / preset.cols) * 100}%` }}
+                      />
                     ))}
                     {Array.from({ length: preset.rows - 1 }).map((_, i) => (
-                      <div key={`row-${i}`} style={{
-                        position: 'absolute',
-                        left: 0,
-                        right: 0,
-                        top: `${((i + 1) / preset.rows) * 100}%`,
-                        height: '2px',
-                        backgroundColor: '#000',
-                        transform: 'translateY(-50%)',
-                      }} />
+                      <div
+                        key={`row-${i}`}
+                        className='hw-bezel-grid-line hw-bezel-grid-line--horizontal hw-bezel-grid-line--black'
+                        style={{ top: `${((i + 1) / preset.rows) * 100}%` }}
+                      />
                     ))}
                   </div>
                 )}

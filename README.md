@@ -16,10 +16,10 @@ Split any image or animated GIF into perfectly sized tiles for your **Elgato Str
 
 ### 🔥 Key Features
 
-- �️ **GIF & Image Support** — Upload animated GIFs or static images to process
+- 🖼️ **GIF & Image Support** — Upload animated GIFs or static images to process
 - 📺 **Screensaver Maker** — Toggle to Screensaver mode to generate perfectly padded images for your Stream Deck's screensaver feature
 - 🖱️ **Drag & drop** — Upload your file and see an instant cropped preview
-- � **GIPHY search** — Browse trending GIFs or search GIPHY directly from the app — no need to leave the page
+- 🔍 **GIPHY search** — Browse trending GIFs or search GIPHY directly from the app — no need to leave the page
 - 🎚️ **6 device presets** — Stream Deck MK.2, XL, Mini, +, Neo, and + XL
 - ✂️ **Cutoff mode** — Accounts for the physical gap between buttons so animations appear seamless
 - 🎯 **Custom crop position** — Drag the crop region to choose exactly which part of the GIF to keep, instead of always center-cropping
