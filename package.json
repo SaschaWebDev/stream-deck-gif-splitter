@@ -3,14 +3,11 @@
   "private": true,
   "version": "0.0.12",
   "type": "module",
-  "engines": {
-    "bun": ">=1.0.0"
-  },
   "scripts": {
-    "dev": "bun --bun vite",
-    "build": "bun --bun tsc -b && bun --bun vite build",
+    "dev": "vite",
+    "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "bun --bun vite preview",
+    "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
