@@ -46,20 +46,22 @@ Split any image or animated GIF into perfectly sized tiles for your **Elgato Str
 
 ### Prerequisites
 
-- [Bun](https://bun.sh) (>=1.0.0)
+- [Node.js](https://nodejs.org) 18+ (LTS recommended) with npm/yarn/pnpm, **or** [Bun](https://bun.sh) (>=1.0.0)
+
+> Both `package-lock.json` and `bun.lock` are committed, so use whichever toolchain you prefer. Examples below use `npm` — substitute `bun` (e.g. `bun install`, `bun run dev`) if you'd rather use Bun.
 
 ### 📥 Installation
 
 ```bash
 git clone https://github.com/SaschaWebDev/animated-stream-deck-background-gif-converter.git
 cd animated-stream-deck-background-gif-converter
-bun install
+npm install
 ```
 
 ### 💻 Development
 
 ```bash
-bun run dev
+npm run dev
 ```
 
 Open [http://localhost:5173](http://localhost:5173) in your browser.
@@ -67,16 +69,16 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 ### 🧪 Testing
 
 ```bash
-bun test              # run all tests once
-bun run test:watch    # run tests in watch mode
-bun run test:coverage # run tests with coverage report
+npm test              # run all tests once
+npm run test:watch    # run tests in watch mode
+npm run test:coverage # run tests with coverage report
 ```
 
 ### 📦 Build
 
 ```bash
-bun run build
-bun run preview   # preview the production build locally
+npm run build
+npm run preview   # preview the production build locally
 ```
 
 ## 🛠️ Tech Stack
