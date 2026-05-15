@@ -177,6 +177,44 @@ export function useFFmpeg() {
     return results
   }, [])
 
+  /** Build the xstack bezel filter chain: crop each tile from an input that has NO gaps,
+   *  then re-stack them with `gap`-pixel black padding between cells. Terminal label is `outLabel`. */
+  function buildBezelFilterChain(
+    cols: number,
+    rows: number,
+    cellWidth: number,
+    cellHeight: number,
+    gap: number,
+    outLabel: string,
+  ): string {
+    const total = rows * cols
+    const parts: string[] = []
+    let idx = 0
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const x = col * cellWidth
+        const y = row * cellHeight
+        parts.push(`[0:v]crop=${cellWidth}:${cellHeight}:${x}:${y}[c${idx}]`)
+        idx++
+      }
+    }
+
+    let inputsStr = ''
+    for (let i = 0; i < total; i++) inputsStr += `[c${i}]`
+
+    const layoutParams: string[] = []
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const x = col * (cellWidth + gap)
+        const y = row * (cellHeight + gap)
+        layoutParams.push(`${x}_${y}`)
+      }
+    }
+    parts.push(`${inputsStr}xstack=inputs=${total}:layout=${layoutParams.join('|')}:fill=black[${outLabel}]`)
+
+    return parts.join(';')
+  }
+
   /** Generate a single padded static image wallpaper by extracting a frame (for GIF input)
    *  or using the cropped image directly (for static input), then xstacking the cells with
    *  black bezel padding. Output is always a truecolor PNG.
@@ -213,40 +251,12 @@ export function useFFmpeg() {
 
     setProgress({ phase: 'splitting', current: 1, total })
 
-    const filterComplex: string[] = []
-    let outIdx = 0
-
-    // Crop each tile assuming the input image has NO gaps
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < cols; col++) {
-        const x = col * cellWidth
-        const y = row * cellHeight
-        filterComplex.push(`[0:v]crop=${cellWidth}:${cellHeight}:${x}:${y}[c${outIdx}];`)
-        outIdx++
-      }
-    }
-
-    let inputsStr = ''
-    for (let i = 0; i < total; i++) {
-      inputsStr += `[c${i}]`
-    }
-
-    const layoutParams: string[] = []
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < cols; col++) {
-        const x = col * (cellWidth + gap)
-        const y = row * (cellHeight + gap)
-        layoutParams.push(`${x}_${y}`)
-      }
-    }
-
-    filterComplex.push(`${inputsStr}xstack=inputs=${total}:layout=${layoutParams.join('|')}:fill=black[out]`)
-
+    const filterChain = buildBezelFilterChain(cols, rows, cellWidth, cellHeight, gap, 'out')
     const outName = 'screensaver.png'
 
     await ffmpeg.exec([
       '-i', inputFile,
-      '-filter_complex', filterComplex.join(' '),
+      '-filter_complex', filterChain,
       '-map', '[out]',
       '-y', outName,
     ])
@@ -265,6 +275,58 @@ export function useFFmpeg() {
       blob,
       url,
       filename: file.name.replace(/\.[^.]+$/i, '') + '_screensaver.png',
+    }
+  }, [])
+
+  /** Generate an animated GIF wallpaper: applies the same bezel-gap xstack to every frame of
+   *  cropped.gif, then quantizes with a two-pass palette so the output stays a reasonable size.
+   *  Caller must ensure the input is animated (this is meaningless on a single-frame source). */
+  const generateAnimatedScreensaver = useCallback(async (
+    file: File,
+    cols: number,
+    rows: number,
+    cellWidth: number,
+    cellHeight: number,
+    gap: number,
+  ): Promise<{ blob: Blob; url: string; filename: string }> => {
+    const ffmpeg = ffmpegRef.current!
+    const total = rows * cols
+
+    const bezelChain = buildBezelFilterChain(cols, rows, cellWidth, cellHeight, gap, 'stacked')
+
+    setProgress({ phase: 'palette', current: 0, total })
+
+    await ffmpeg.exec([
+      '-i', 'cropped.gif',
+      '-filter_complex', `${bezelChain};[stacked]palettegen=stats_mode=full[pal]`,
+      '-map', '[pal]',
+      '-y', 'wallpaper_palette.png',
+    ])
+
+    setProgress({ phase: 'splitting', current: 1, total })
+
+    await ffmpeg.exec([
+      '-i', 'cropped.gif',
+      '-i', 'wallpaper_palette.png',
+      '-filter_complex', `${bezelChain};[stacked][1:v]paletteuse=dither=floyd_steinberg[out]`,
+      '-map', '[out]',
+      '-y', 'wallpaper.gif',
+    ])
+
+    const data = await ffmpeg.readFile('wallpaper.gif')
+    const part: BlobPart = typeof data === 'string' ? data : new Uint8Array(data)
+    const blob = new Blob([part], { type: 'image/gif' })
+    const url = URL.createObjectURL(blob)
+
+    await ffmpeg.deleteFile('wallpaper_palette.png')
+    await ffmpeg.deleteFile('wallpaper.gif')
+
+    setProgress({ phase: 'done', current: total, total })
+
+    return {
+      blob,
+      url,
+      filename: file.name.replace(/\.[^.]+$/i, '') + '_screensaver_animated.gif',
     }
   }, [])
 
@@ -341,5 +403,5 @@ export function useFFmpeg() {
     setProgress(null)
   }, [])
 
-  return { loading, ensureLoaded, cropGif, splitGif, generateScreensaver, extractCroppedFrame, extractFrames, cleanup, progress, resetProgress }
+  return { loading, ensureLoaded, cropGif, splitGif, generateScreensaver, generateAnimatedScreensaver, extractCroppedFrame, extractFrames, cleanup, progress, resetProgress }
 }

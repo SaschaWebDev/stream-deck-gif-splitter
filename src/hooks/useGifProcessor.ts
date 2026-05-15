@@ -13,11 +13,13 @@ export function useGifProcessor() {
   const [error, setError] = useState<string | null>(null);
   const [screensaverResult, setScreensaverResult] = useState<ScreensaverResult | null>(null);
   const screensaverResultRef = useRef<ScreensaverResult | null>(null);
+  const [animatedScreensaverResult, setAnimatedScreensaverResult] = useState<ScreensaverResult | null>(null);
+  const animatedScreensaverResultRef = useRef<ScreensaverResult | null>(null);
   const [cropSyncKey, setCropSyncKey] = useState(0);
   const [tileSyncKey] = useState(0);
   const tileLoadCount = useRef(0);
 
-  const { loading, cropGif, splitGif, generateScreensaver, extractCroppedFrame, extractFrames, cleanup, progress, resetProgress } = useFFmpeg();
+  const { loading, cropGif, splitGif, generateScreensaver, generateAnimatedScreensaver, extractCroppedFrame, extractFrames, cleanup, progress, resetProgress } = useFFmpeg();
 
   const isSplitting = progress !== null && progress.phase !== 'done';
 
@@ -27,6 +29,12 @@ export function useGifProcessor() {
     if (screensaverResultRef.current) URL.revokeObjectURL(screensaverResultRef.current.url);
     screensaverResultRef.current = next;
     setScreensaverResult(next);
+  }, []);
+
+  const updateAnimatedScreensaverResult = useCallback((next: ScreensaverResult | null) => {
+    if (animatedScreensaverResultRef.current) URL.revokeObjectURL(animatedScreensaverResultRef.current.url);
+    animatedScreensaverResultRef.current = next;
+    setAnimatedScreensaverResult(next);
   }, []);
 
   const performCrop = useCallback(async (f: File, tw: number, th: number, cropX?: number, cropY?: number, trimStart?: number, trimEnd?: number) => {
@@ -56,6 +64,7 @@ export function useGifProcessor() {
     results.forEach((r) => URL.revokeObjectURL(r.url));
     setResults([]);
     updateScreensaverResult(null);
+    updateAnimatedScreensaverResult(null);
     setTilesReady(false);
     tileLoadCount.current = 0;
 
@@ -66,7 +75,7 @@ export function useGifProcessor() {
       setError(err instanceof Error ? err.message : 'Failed to split GIF');
       resetProgress();
     }
-  }, [croppedPreview, splitGif, results, updateScreensaverResult, resetProgress]);
+  }, [croppedPreview, splitGif, results, updateScreensaverResult, updateAnimatedScreensaverResult, resetProgress]);
 
   const performGenerateScreensaver = useCallback(async (
     file: File,
@@ -82,6 +91,7 @@ export function useGifProcessor() {
     results.forEach((r) => URL.revokeObjectURL(r.url));
     setResults([]);
     updateScreensaverResult(null);
+    updateAnimatedScreensaverResult(null);
     setTilesReady(false);
 
     try {
@@ -90,8 +100,20 @@ export function useGifProcessor() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate screensaver');
       resetProgress();
+      return;
     }
-  }, [croppedPreview, generateScreensaver, results, updateScreensaverResult, resetProgress]);
+
+    if (file.type === 'image/gif') {
+      try {
+        const animated = await generateAnimatedScreensaver(file, cols, rows, tileWidth, tileHeight, gap);
+        updateAnimatedScreensaverResult(animated);
+      } catch (err) {
+        // PNG already succeeded — keep it, surface the secondary failure without nuking results
+        setError(err instanceof Error ? err.message : 'Failed to generate animated wallpaper');
+        updateAnimatedScreensaverResult(null);
+      }
+    }
+  }, [croppedPreview, generateScreensaver, generateAnimatedScreensaver, results, updateScreensaverResult, updateAnimatedScreensaverResult, resetProgress]);
 
   const handleTileLoad = useCallback(() => {
     tileLoadCount.current++;
@@ -104,21 +126,23 @@ export function useGifProcessor() {
     if (croppedPreview) URL.revokeObjectURL(croppedPreview);
     results.forEach((r) => URL.revokeObjectURL(r.url));
     updateScreensaverResult(null);
+    updateAnimatedScreensaverResult(null);
     await cleanup();
     setCroppedPreview(null);
     setResults([]);
     setTilesReady(false);
     setError(null);
     resetProgress();
-  }, [croppedPreview, results, updateScreensaverResult, cleanup, resetProgress]);
+  }, [croppedPreview, results, updateScreensaverResult, updateAnimatedScreensaverResult, cleanup, resetProgress]);
 
   const clearResults = useCallback(() => {
     results.forEach((r) => URL.revokeObjectURL(r.url));
     updateScreensaverResult(null);
+    updateAnimatedScreensaverResult(null);
     setResults([]);
     setTilesReady(false);
     resetProgress();
-  }, [results, updateScreensaverResult, resetProgress]);
+  }, [results, updateScreensaverResult, updateAnimatedScreensaverResult, resetProgress]);
 
   const clearCroppedPreview = useCallback(async () => {
     if (croppedPreview) URL.revokeObjectURL(croppedPreview);
@@ -133,6 +157,7 @@ export function useGifProcessor() {
     tilesReady,
     error,
     screensaverResult,
+    animatedScreensaverResult,
     cropSyncKey,
     tileSyncKey,
     loading,

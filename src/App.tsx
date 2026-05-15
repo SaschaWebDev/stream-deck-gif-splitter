@@ -78,6 +78,7 @@ function App() {
     tilesReady,
     error,
     screensaverResult,
+    animatedScreensaverResult,
     cropSyncKey,
     tileSyncKey,
     loading,
@@ -494,6 +495,7 @@ function App() {
           ) : (
             <ScreensaverPanel
               screensaverResult={screensaverResult}
+              animatedScreensaverResult={animatedScreensaverResult}
               isSplitting={isSplitting}
               basePreset={basePreset}
               resultsRef={resultsRef}

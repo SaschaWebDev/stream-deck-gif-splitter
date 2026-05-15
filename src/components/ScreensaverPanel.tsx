@@ -3,6 +3,7 @@ import type { Preset } from '../types';
 
 interface ScreensaverPanelProps {
   screensaverResult: { blob: Blob; url: string; filename: string } | null;
+  animatedScreensaverResult: { blob: Blob; url: string; filename: string } | null;
   isSplitting: boolean;
   basePreset: Preset;
   resultsRef: RefObject<HTMLDivElement | null>;
@@ -10,20 +11,30 @@ interface ScreensaverPanelProps {
 
 export function ScreensaverPanel({
   screensaverResult,
+  animatedScreensaverResult,
   isSplitting,
   basePreset,
   resultsRef,
 }: ScreensaverPanelProps) {
   if (!isSplitting && !screensaverResult) return null;
 
-  const handleDownload = () => {
-    if (!screensaverResult) return;
+  const downloadResult = (result: { url: string; filename: string }) => {
     const a = document.createElement('a');
-    a.href = screensaverResult.url;
-    a.download = screensaverResult.filename;
+    a.href = result.url;
+    a.download = result.filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+  };
+
+  const handleDownload = () => {
+    if (!screensaverResult) return;
+    downloadResult(screensaverResult);
+  };
+
+  const handleDownloadAnimated = () => {
+    if (!animatedScreensaverResult) return;
+    downloadResult(animatedScreensaverResult);
   };
 
   return (
@@ -44,6 +55,14 @@ export function ScreensaverPanel({
               >
                 Download Image Wallpaper
               </button>
+              {animatedScreensaverResult && (
+                <button
+                  className='hw-download-button'
+                  onClick={handleDownloadAnimated}
+                >
+                  Download Animated Wallpaper
+                </button>
+              )}
             </div>
           </div>
         )}
