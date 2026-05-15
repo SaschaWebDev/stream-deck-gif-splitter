@@ -84,7 +84,7 @@ function buildParentPageManifest(
   };
 }
 
-function buildChildPageManifest(
+export function buildChildPageManifest(
   tiles: SplitResult[],
   profileName: string,
 ): Record<string, unknown> {
@@ -92,12 +92,10 @@ function buildChildPageManifest(
 
   for (const tile of tiles) {
     const key = `${tile.col},${tile.row}`;
-    const isTopLeft = key === '0,0';
-    
     actions[key] = {
       ActionID: crypto.randomUUID(),
       LinkedTitle: false,
-      Name: isTopLeft ? 'Back' : 'GIF',
+      Name: 'Back',
       Settings: {},
       State: 0,
       States: [
@@ -113,7 +111,7 @@ function buildChildPageManifest(
           TitleColor: '#ffffff',
         },
       ],
-      UUID: isTopLeft ? 'com.elgato.streamdeck.profile.backtoparent' : 'com.elgato.streamdeck.system.hotkey',
+      UUID: 'com.elgato.streamdeck.profile.backtoparent',
     };
   }
 
@@ -197,8 +195,7 @@ export async function generateStreamDeckProfile(
 
   const imagesFolder = childFolder.folder('Images')!;
   for (const tile of results) {
-    const arrayBuffer = await tile.blob.arrayBuffer();
-    imagesFolder.file(`tile_${tile.col}_${tile.row}.gif`, arrayBuffer);
+    imagesFolder.file(`tile_${tile.col}_${tile.row}.gif`, tile.blob);
   }
 
   return zip.generateAsync({ type: 'blob' });

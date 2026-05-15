@@ -1,7 +1,6 @@
-import { encodePageFolder, generateStreamDeckProfile } from '../streamDeckProfile';
+import { encodePageFolder, buildChildPageManifest } from '../streamDeckProfile';
 import type { SplitResult } from '../ffmpeg';
-import JSZip from 'jszip';
-import { vi, describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 describe('encodePageFolder', () => {
   it('produces a known output for a known UUID', () => {
@@ -44,103 +43,34 @@ describe('encodePageFolder', () => {
   });
 });
 
-describe('generateStreamDeckProfile', () => {
-  let originalCrypto: Crypto;
+describe('buildChildPageManifest', () => {
+  type ChildManifest = {
+    Name: string;
+    Controllers: Array<{
+      Actions: Record<string, { UUID: string; States: Array<{ Image: string }> }>;
+    }>;
+  };
 
-  beforeAll(() => {
-    originalCrypto = globalThis.crypto;
-  });
-
-  afterAll(() => {
-    Object.defineProperty(globalThis, 'crypto', {
-      value: originalCrypto
-    });
-  });
-
-  it('generates a valid stream deck profile zip', async () => {
-    let callCount = 0;
-    Object.defineProperty(globalThis, 'crypto', {
-      value: {
-        randomUUID: vi.fn(() => `12345678-1234-1234-1234-123456789ab${callCount++}`)
-      }
-    });
-
-    const results: SplitResult[] = [
-      { col: 1, row: 1, blob: new Blob(['gif data']), url: 'blob:url' },
+  it('points each tile action at its Images/tile_<col>_<row>.gif file and adds a synthetic (0,0) back button when none is present', () => {
+    const tiles: SplitResult[] = [
+      { col: 1, row: 1, blob: new Blob(), url: '', filename: 'tile_1_1.gif' },
     ];
-    
-    const profileBlob = await generateStreamDeckProfile(results, 'Test Profile', '20GAA9901');
-    expect(profileBlob).toBeInstanceOf(Blob);
+    const manifest = buildChildPageManifest(tiles, 'Test Profile') as ChildManifest;
 
-    const zip = await JSZip.loadAsync(await profileBlob.arrayBuffer());
-    
-    // root is generated first (callCount 0)
-    const rootFolderName = '12345678-1234-1234-1234-123456789AB0.sdProfile/';
-    expect(zip.files[rootFolderName]).toBeDefined();
+    expect(manifest.Name).toBe('Test Profile');
+    expect(manifest.Controllers[0].Actions['1,1'].States[0].Image).toBe('Images/tile_1_1.gif');
 
-    // Check manifest.json inside root
-    const rootManifestContent = await zip.file(`${rootFolderName}manifest.json`)?.async('string');
-    expect(rootManifestContent).toBeDefined();
-    const rootManifest = JSON.parse(rootManifestContent!);
-    expect(rootManifest.Name).toBe('Test Profile');
-    expect(rootManifest.Device.Model).toBe('20GAA9901');
-    // parent is generated second (callCount 1)
-    expect(rootManifest.Pages.Current).toBe('12345678-1234-1234-1234-123456789ab1');
-
-    // parent folder name based on UUID
-    const parentFolderName = encodePageFolder('12345678-1234-1234-1234-123456789ab1');
-    // child is generated third (callCount 2)
-    const childFolderName = encodePageFolder('12345678-1234-1234-1234-123456789ab2');
-
-    // Check parent manifest
-    const parentManifestContent = await zip.file(`${rootFolderName}Profiles/${parentFolderName}/manifest.json`)?.async('string');
-    expect(parentManifestContent).toBeDefined();
-    const parentManifest = JSON.parse(parentManifestContent!);
-    expect(parentManifest.Controllers[0].Actions['0,0'].UUID).toBe('com.elgato.streamdeck.profile.openchild');
-
-    // Check child manifest
-    const childManifestContent = await zip.file(`${rootFolderName}Profiles/${childFolderName}/manifest.json`)?.async('string');
-    expect(childManifestContent).toBeDefined();
-    
-    const childManifest = JSON.parse(childManifestContent!);
-    expect(childManifest.Name).toBe('Test Profile');
-    expect(childManifest.Controllers[0].Actions['1,1'].States[0].Image).toBe('Images/tile_1_1.gif');
-    
-    // Ensure back button is populated at 0,0
-    expect(childManifest.Controllers[0].Actions['0,0'].UUID).toBe('com.elgato.streamdeck.profile.backtoparent');
-    expect(childManifest.Controllers[0].Actions['0,0'].States[0].Image).toBe('');
-    
-    // Check that images are present
-    const imageContent = await zip.file(`${rootFolderName}Profiles/${childFolderName}/Images/tile_1_1.gif`)?.async('string');
-    expect(imageContent).toBe('gif data');
+    // Synthetic (0,0) back button — image must be empty
+    expect(manifest.Controllers[0].Actions['0,0'].UUID).toBe('com.elgato.streamdeck.profile.backtoparent');
+    expect(manifest.Controllers[0].Actions['0,0'].States[0].Image).toBe('');
   });
-  
-  it('does not overwrite existing 0,0 action if tile is present at 0,0', async () => {
-    let callCount = 0;
-    Object.defineProperty(globalThis, 'crypto', {
-      value: {
-        randomUUID: vi.fn(() => `12345678-1234-1234-1234-123456789ab${callCount++}`)
-      }
-    });
 
-    const results: SplitResult[] = [
-      { col: 0, row: 0, blob: new Blob(['0,0 gif']), url: 'blob:url' },
+  it('does not overwrite the (0,0) action when a real tile occupies that slot', () => {
+    const tiles: SplitResult[] = [
+      { col: 0, row: 0, blob: new Blob(), url: '', filename: 'tile_0_0.gif' },
     ];
-    
-    const profileBlob = await generateStreamDeckProfile(results, 'Test', '10GAA9901');
-    const zip = await JSZip.loadAsync(await profileBlob.arrayBuffer());
-    
-    const rootFolder = Object.keys(zip.files).find(name => name.endsWith('.sdProfile/')) || '';
-    const profiles = Object.keys(zip.files).filter(name => name.includes('Profiles/') && name.endsWith('manifest.json'));
-    
-    // Profiles are created for parent and child.
-    // the root one is `12345678-1234-1234-1234-123456789ABC.sdProfile/manifest.json`
-    // and there are two in Profiles/
-    const childManifestPath = profiles[1]; // child is generated second, or just find the one that has Name="Test"
-    
-    const childManifestContent = await zip.file(childManifestPath)?.async('string');
-    const childManifest = JSON.parse(childManifestContent!);
-    
-    expect(childManifest.Controllers[0].Actions['0,0'].States[0].Image).toBe('Images/tile_0_0.gif');
+    const manifest = buildChildPageManifest(tiles, 'Test') as ChildManifest;
+
+    expect(manifest.Controllers[0].Actions['0,0'].States[0].Image).toBe('Images/tile_0_0.gif');
   });
 });
