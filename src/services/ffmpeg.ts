@@ -268,6 +268,26 @@ export function useFFmpeg() {
     }
   }, [])
 
+  /** Extract a single PNG frame from the already-cropped cropped.gif at the given timestamp.
+   *  Used to show a static preview of the user-selected wallpaper frame. Reuses the shared
+   *  FFmpeg instance — caller must ensure no other op is in flight. */
+  const extractCroppedFrame = useCallback(async (time: number): Promise<string> => {
+    const ffmpeg = ffmpegRef.current!
+    const t = Math.max(0, time)
+    await ffmpeg.exec([
+      '-ss', t.toFixed(3),
+      '-i', 'cropped.gif',
+      '-frames:v', '1',
+      '-y', 'preview_frame.png',
+    ])
+    const data = await ffmpeg.readFile('preview_frame.png')
+    const part: BlobPart = typeof data === 'string' ? data : new Uint8Array(data)
+    const blob = new Blob([part], { type: 'image/png' })
+    const url = URL.createObjectURL(blob)
+    await ffmpeg.deleteFile('preview_frame.png')
+    return url
+  }, [])
+
   /** Extract evenly-spaced snapshot frames from a GIF for filmstrip display.
    *  Uses a dedicated ephemeral FFmpeg instance to avoid corrupting the shared crop/split instance. */
   const extractFrames = useCallback(async (file: File, duration: number, count: number): Promise<string[]> => {
@@ -321,5 +341,5 @@ export function useFFmpeg() {
     setProgress(null)
   }, [])
 
-  return { loading, ensureLoaded, cropGif, splitGif, generateScreensaver, extractFrames, cleanup, progress, resetProgress }
+  return { loading, ensureLoaded, cropGif, splitGif, generateScreensaver, extractCroppedFrame, extractFrames, cleanup, progress, resetProgress }
 }

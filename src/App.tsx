@@ -1,4 +1,4 @@
-import { useCallback, useState, useRef } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { useFileUpload } from './hooks/useFileUpload';
 import { useDeviceConfig } from './hooks/useDeviceConfig';
 import { useGifProcessor } from './hooks/useGifProcessor';
@@ -41,9 +41,11 @@ function App() {
   const [filmstripFrames, setFilmstripFrames] = useState<string[]>([]);
   const [appMode, setAppMode] = useState<AppMode>('splitter');
   const [screensaverFrameTime, setScreensaverFrameTime] = useState(0);
+  const [screensaverFramePreview, setScreensaverFramePreview] = useState<string | null>(null);
   const trimRangeRef = useRef<{ start: number; end: number } | null>(null);
   const cropOffsetRef = useRef<{ x: number; y: number } | null>(null);
   const screensaverFrameTimeRef = useRef(0);
+  const screensaverFramePreviewRef = useRef<string | null>(null);
 
   const {
     presetIndex,
@@ -84,6 +86,7 @@ function App() {
     performCrop,
     performSplit,
     performGenerateScreensaver,
+    extractCroppedFrame,
     extractFrames,
     handleTileLoad,
     resetProcessor,
@@ -96,6 +99,12 @@ function App() {
   const { zipping, zippingProfile, downloadZip, downloadProfile } = useDownload();
 
   // --- Coordination handlers ---
+
+  const updateFramePreview = useCallback((url: string | null) => {
+    if (screensaverFramePreviewRef.current) URL.revokeObjectURL(screensaverFramePreviewRef.current);
+    screensaverFramePreviewRef.current = url;
+    setScreensaverFramePreview(url);
+  }, []);
 
   const handleClearFile = useCallback(async () => {
     await resetProcessor();
@@ -111,9 +120,10 @@ function App() {
     setGifDuration(null);
     setScreensaverFrameTime(0);
     screensaverFrameTimeRef.current = 0;
+    updateFramePreview(null);
     filmstripFrames.forEach((url) => URL.revokeObjectURL(url));
     setFilmstripFrames([]);
-  }, [resetProcessor, clearUpload, setCustomGridEnabled, setGridOffsetCol, setGridOffsetRow, filmstripFrames]);
+  }, [resetProcessor, clearUpload, setCustomGridEnabled, setGridOffsetCol, setGridOffsetRow, filmstripFrames, updateFramePreview]);
 
   const handleAppModeChange = useCallback(async (newMode: AppMode) => {
     if (newMode === appMode) return;
@@ -131,6 +141,7 @@ function App() {
     setCustomLoopEnabled(false);
     setScreensaverFrameTime(0);
     screensaverFrameTimeRef.current = 0;
+    updateFramePreview(null);
     filmstripFrames.forEach((url) => URL.revokeObjectURL(url));
     setFilmstripFrames([]);
     const duration = await parseGifDuration(f);
@@ -146,7 +157,7 @@ function App() {
         // Filmstrip extraction failed, continue without it
       }
     }
-  }, [resetProcessor, setFileWithPreview, performCrop, extractFrames, targetWidth, targetHeight, filmstripFrames, appMode]);
+  }, [resetProcessor, setFileWithPreview, performCrop, extractFrames, targetWidth, targetHeight, filmstripFrames, appMode, updateFramePreview]);
 
   const handlePresetChange = useCallback(async (newIndex: number) => {
     setPresetIndex(newIndex);
@@ -299,6 +310,28 @@ function App() {
     screensaverFrameTimeRef.current = clamped;
   }, [gifDuration]);
 
+  // Re-extract a static preview frame whenever the cropped GIF, selected frame, mode, or
+  // file changes — but never while another FFmpeg op is in flight (single-threaded WASM).
+  useEffect(() => {
+    if (appMode !== 'screensaver' || file?.type !== 'image/gif' || !croppedPreview || isCropping || isSplitting) {
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const url = await extractCroppedFrame(screensaverFrameTime);
+        if (cancelled) {
+          URL.revokeObjectURL(url);
+          return;
+        }
+        updateFramePreview(url);
+      } catch {
+        // extraction failed; right-side preview falls back to the animated cropped GIF
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [appMode, file, croppedPreview, screensaverFrameTime, isCropping, isSplitting, extractCroppedFrame, updateFramePreview]);
+
   const handleSplit = useCallback(async () => {
     if (!file) return;
     if (appMode === 'screensaver') {
@@ -427,6 +460,7 @@ function App() {
                 trimRange={trimRange}
                 filmstripFrames={filmstripFrames}
                 screensaverFrameTime={screensaverFrameTime}
+                screensaverFramePreview={screensaverFramePreview}
                 onSplit={handleSplit}
                 onCropOffsetChange={handleCropOffsetChange}
                 onTrimChange={handleTrimChange}

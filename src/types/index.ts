@@ -83,6 +83,7 @@ export interface CropPreviewProps {
   trimRange: { start: number; end: number } | null;
   filmstripFrames: string[];
   screensaverFrameTime: number;
+  screensaverFramePreview: string | null;
   onSplit: () => void;
   onCropOffsetChange: (x: number, y: number) => void;
   onTrimChange: (start: number, end: number) => void;

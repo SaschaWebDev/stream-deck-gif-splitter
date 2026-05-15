@@ -17,7 +17,7 @@ export function useGifProcessor() {
   const [tileSyncKey] = useState(0);
   const tileLoadCount = useRef(0);
 
-  const { loading, cropGif, splitGif, generateScreensaver, extractFrames, cleanup, progress, resetProgress } = useFFmpeg();
+  const { loading, cropGif, splitGif, generateScreensaver, extractCroppedFrame, extractFrames, cleanup, progress, resetProgress } = useFFmpeg();
 
   const isSplitting = progress !== null && progress.phase !== 'done';
 
@@ -142,6 +142,7 @@ export function useGifProcessor() {
     performCrop,
     performSplit,
     performGenerateScreensaver,
+    extractCroppedFrame,
     extractFrames,
     handleTileLoad,
     resetProcessor,

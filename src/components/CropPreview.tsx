@@ -24,6 +24,7 @@ export function CropPreview({
   trimRange,
   filmstripFrames,
   screensaverFrameTime,
+  screensaverFramePreview,
   onSplit,
   onCropOffsetChange,
   onTrimChange,
@@ -449,12 +450,17 @@ export function CropPreview({
           <div className='hw-crop-viewport'>
             {syncedSrcs ? (
               <div className='hw-cropped-wrapper'>
-                <img
-                  ref={cropRef}
-                  key={`crop-${cropSyncKey}`}
-                  src={syncedSrcs.crop}
-                  alt='Cropped'
-                />
+                {(() => {
+                  const showStaticFrame = appMode === 'screensaver' && file?.type === 'image/gif' && screensaverFramePreview;
+                  return (
+                    <img
+                      ref={cropRef}
+                      key={showStaticFrame ? `frame-${screensaverFramePreview}` : `crop-${cropSyncKey}`}
+                      src={showStaticFrame ? screensaverFramePreview : syncedSrcs.crop}
+                      alt={showStaticFrame ? 'Selected static frame' : 'Cropped'}
+                    />
+                  );
+                })()}
                 {appMode === 'screensaver' && (
                   <div className='hw-bezel-overlay'>
                     {Array.from({ length: preset.cols - 1 }).map((_, i) => (
