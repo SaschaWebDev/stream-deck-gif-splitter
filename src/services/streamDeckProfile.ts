@@ -84,7 +84,7 @@ function buildParentPageManifest(
   };
 }
 
-function buildChildPageManifest(
+export function buildChildPageManifest(
   tiles: SplitResult[],
   profileName: string,
 ): Record<string, unknown> {

@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { PRESETS } from '../constants/presets';
+import type { AppMode } from '../types';
 import {
   calculateTargetWidth,
   calculateTargetHeight,
@@ -8,14 +9,16 @@ import {
   calculateScaledGap,
 } from '../utils/device';
 
-export function useDeviceConfig() {
+export function useDeviceConfig(appMode: AppMode = 'splitter') {
   const [presetIndex, setPresetIndex] = useState(0);
-  const [cutoffMode, setCutoffMode] = useState(true);
+  const [rawCutoffMode, setCutoffMode] = useState(true);
   const [customGridEnabled, setCustomGridEnabled] = useState(false);
   const [customCols, setCustomCols] = useState(1);
   const [customRows, setCustomRows] = useState(1);
   const [gridOffsetCol, setGridOffsetCol] = useState(0);
   const [gridOffsetRow, setGridOffsetRow] = useState(0);
+
+  const cutoffMode = appMode === 'screensaver' ? false : rawCutoffMode;
 
   const basePreset = PRESETS[presetIndex];
 

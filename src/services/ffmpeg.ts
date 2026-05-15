@@ -112,7 +112,7 @@ export function useFFmpeg() {
 
   /** Split the already-cropped GIF (still in the virtual FS) into a grid. */
   const splitGif = useCallback(async (
-    filename: string,
+    file: File,
     cols: number,
     rows: number,
     cellWidth: number,
@@ -134,7 +134,8 @@ export function useFFmpeg() {
     // Crop each cell with palette-based encoding
     const results: SplitResult[] = []
     let count = 0
-    const baseName = filename.replace(/\.gif$/i, '')
+    const outExt = file.type === 'image/gif' ? 'gif' : 'png'
+    const baseName = file.name.replace(/\.[^.]+$/i, '')
 
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
@@ -143,7 +144,7 @@ export function useFFmpeg() {
 
         const x = col * (cellWidth + gap)
         const y = row * (cellHeight + gap)
-        const outName = `out_${row}_${col}.gif`
+        const outName = `out_${row}_${col}.${outExt}`
 
         await ffmpeg.exec([
           '-i', 'cropped.gif',
@@ -155,7 +156,7 @@ export function useFFmpeg() {
 
         const data = await ffmpeg.readFile(outName)
         const part: BlobPart = typeof data === 'string' ? data : new Uint8Array(data)
-        const blob = new Blob([part], { type: 'image/gif' })
+        const blob = new Blob([part], { type: `image/${outExt}` })
         const url = URL.createObjectURL(blob)
 
         results.push({
@@ -163,7 +164,7 @@ export function useFFmpeg() {
           col,
           blob,
           url,
-          filename: `${baseName}_${count}.gif`,
+          filename: `${baseName}_${count}.${outExt}`,
         })
 
         await ffmpeg.deleteFile(outName)
@@ -174,6 +175,117 @@ export function useFFmpeg() {
 
     setProgress({ phase: 'done', current: total, total })
     return results
+  }, [])
+
+  /** Generate a single padded static image wallpaper by extracting a frame (for GIF input)
+   *  or using the cropped image directly (for static input), then xstacking the cells with
+   *  black bezel padding. Output is always a truecolor PNG.
+   *
+   *  For GIF input, frameTime selects which frame becomes the static wallpaper. */
+  const generateScreensaver = useCallback(async (
+    file: File,
+    cols: number,
+    rows: number,
+    cellWidth: number,
+    cellHeight: number,
+    gap: number,
+    frameTime?: number,
+  ): Promise<{ blob: Blob; url: string; filename: string }> => {
+    const ffmpeg = ffmpegRef.current!
+
+    const isGif = file.type === 'image/gif'
+    const total = rows * cols
+
+    setProgress({ phase: 'palette', current: 0, total })
+
+    // GIF input: extract the user-selected frame to a static PNG.
+    // Non-GIF input: cropped.gif is already a single static image, use it directly.
+    const inputFile = isGif ? 'frame.png' : 'cropped.gif'
+    if (isGif) {
+      const t = Math.max(0, frameTime ?? 0)
+      await ffmpeg.exec([
+        '-ss', t.toFixed(3),
+        '-i', 'cropped.gif',
+        '-frames:v', '1',
+        '-y', 'frame.png',
+      ])
+    }
+
+    setProgress({ phase: 'splitting', current: 1, total })
+
+    const filterComplex: string[] = []
+    let outIdx = 0
+
+    // Crop each tile assuming the input image has NO gaps
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const x = col * cellWidth
+        const y = row * cellHeight
+        filterComplex.push(`[0:v]crop=${cellWidth}:${cellHeight}:${x}:${y}[c${outIdx}];`)
+        outIdx++
+      }
+    }
+
+    let inputsStr = ''
+    for (let i = 0; i < total; i++) {
+      inputsStr += `[c${i}]`
+    }
+
+    const layoutParams: string[] = []
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const x = col * (cellWidth + gap)
+        const y = row * (cellHeight + gap)
+        layoutParams.push(`${x}_${y}`)
+      }
+    }
+
+    filterComplex.push(`${inputsStr}xstack=inputs=${total}:layout=${layoutParams.join('|')}:fill=black[out]`)
+
+    const outName = 'screensaver.png'
+
+    await ffmpeg.exec([
+      '-i', inputFile,
+      '-filter_complex', filterComplex.join(' '),
+      '-map', '[out]',
+      '-y', outName,
+    ])
+
+    const data = await ffmpeg.readFile(outName)
+    const part: BlobPart = typeof data === 'string' ? data : new Uint8Array(data)
+    const blob = new Blob([part], { type: 'image/png' })
+    const url = URL.createObjectURL(blob)
+
+    if (isGif) await ffmpeg.deleteFile('frame.png')
+    await ffmpeg.deleteFile(outName)
+
+    setProgress({ phase: 'done', current: total, total })
+
+    return {
+      blob,
+      url,
+      filename: file.name.replace(/\.[^.]+$/i, '') + '_screensaver.png',
+    }
+  }, [])
+
+  /** Extract a single PNG frame from the already-cropped cropped.gif at the given timestamp.
+   *  Used to show a static preview of the user-selected wallpaper frame. Reuses the shared
+   *  FFmpeg instance — caller must ensure no other op is in flight. */
+  const extractCroppedFrame = useCallback(async (time: number): Promise<string> => {
+    const ffmpeg = ffmpegRef.current!
+    const t = Math.max(0, time)
+    await ffmpeg.exec([
+      '-ss', t.toFixed(3),
+      '-i', 'cropped.gif',
+      '-frames:v', '1',
+      '-y', 'preview_frame.png',
+    ])
+    const data = await ffmpeg.readFile('preview_frame.png')
+    const part: BlobPart = typeof data === 'string' ? data : new Uint8Array(data)
+    const blob = new Blob([part], { type: 'image/png' })
+    const url = URL.createObjectURL(blob)
+    await ffmpeg.deleteFile('preview_frame.png')
+    return url
   }, [])
 
   /** Extract evenly-spaced snapshot frames from a GIF for filmstrip display.
@@ -229,5 +341,5 @@ export function useFFmpeg() {
     setProgress(null)
   }, [])
 
-  return { loading, ensureLoaded, cropGif, splitGif, extractFrames, cleanup, progress, resetProgress }
+  return { loading, ensureLoaded, cropGif, splitGif, generateScreensaver, extractCroppedFrame, extractFrames, cleanup, progress, resetProgress }
 }

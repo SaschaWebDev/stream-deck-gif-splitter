@@ -3,6 +3,9 @@ import type { CropPreviewProps } from '../types';
 import { computeScaledDimensions } from '../utils/crop';
 
 export function CropPreview({
+  appMode,
+  preset,
+  file,
   preview,
   croppedPreview,
   isCropping,
@@ -20,9 +23,12 @@ export function CropPreview({
   gifDuration,
   trimRange,
   filmstripFrames,
+  screensaverFrameTime,
+  screensaverFramePreview,
   onSplit,
   onCropOffsetChange,
   onTrimChange,
+  onScreensaverFrameChange,
 }: CropPreviewProps) {
   const origRef = useRef<HTMLImageElement>(null);
   const cropRef = useRef<HTMLImageElement>(null);
@@ -159,6 +165,45 @@ export function CropPreview({
     setLocalTrim(null);
   }, [trimDragging, localTrim, onTrimChange]);
 
+  // Single-handle frame picker for Image Wallpaper mode (GIF input)
+  const frameTrackRef = useRef<HTMLDivElement>(null);
+  const [frameDragging, setFrameDragging] = useState(false);
+  const [localFrameTime, setLocalFrameTime] = useState<number | null>(null);
+  const frameDragRef = useRef<{ startClientX: number; startValue: number } | null>(null);
+
+  const showFramePicker = appMode === 'screensaver' && file?.type === 'image/gif' && gifDuration != null && gifDuration > 0;
+  const activeFrameTime = localFrameTime ?? screensaverFrameTime;
+
+  const handleFramePointerDown = useCallback((e: React.PointerEvent) => {
+    e.preventDefault();
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    setFrameDragging(true);
+    frameDragRef.current = {
+      startClientX: e.clientX,
+      startValue: activeFrameTime,
+    };
+  }, [activeFrameTime]);
+
+  const handleFramePointerMove = useCallback((e: React.PointerEvent) => {
+    if (!frameDragging || !frameDragRef.current || !frameTrackRef.current || !gifDuration) return;
+    const trackRect = frameTrackRef.current.getBoundingClientRect();
+    const trackWidth = trackRect.width;
+    const dx = e.clientX - frameDragRef.current.startClientX;
+    const dSeconds = (dx / trackWidth) * gifDuration;
+    const newValue = frameDragRef.current.startValue + dSeconds;
+    const clamped = Math.max(0, Math.min(gifDuration, newValue));
+    setLocalFrameTime(clamped);
+  }, [frameDragging, gifDuration]);
+
+  const handleFramePointerUp = useCallback((e: React.PointerEvent) => {
+    if (!frameDragging || localFrameTime == null) return;
+    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    setFrameDragging(false);
+    frameDragRef.current = null;
+    onScreensaverFrameChange(localFrameTime);
+    setLocalFrameTime(null);
+  }, [frameDragging, localFrameTime, onScreensaverFrameChange]);
+
   const showCropEditor = customCropEnabled && preview;
 
   return (
@@ -226,7 +271,26 @@ export function CropPreview({
                       onPointerDown={handlePointerDown}
                       onPointerMove={handlePointerMove}
                       onPointerUp={handlePointerUp}
-                    />
+                    >
+                      {appMode === 'screensaver' && (
+                        <div className='hw-bezel-overlay'>
+                          {Array.from({ length: preset.cols - 1 }).map((_, i) => (
+                            <div
+                              key={`col-${i}`}
+                              className='hw-bezel-grid-line hw-bezel-grid-line--vertical hw-bezel-grid-line--white'
+                              style={{ left: `${((i + 1) / preset.cols) * 100}%` }}
+                            />
+                          ))}
+                          {Array.from({ length: preset.rows - 1 }).map((_, i) => (
+                            <div
+                              key={`row-${i}`}
+                              className='hw-bezel-grid-line hw-bezel-grid-line--horizontal hw-bezel-grid-line--white'
+                              style={{ top: `${((i + 1) / preset.rows) * 100}%` }}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </>
                 )}
               </div>
@@ -321,6 +385,40 @@ export function CropPreview({
               </div>
             </div>
           )}
+          {showFramePicker && (
+            <div className={`hw-timeline${isCropping ? ' hw-timeline-disabled' : ''}`}>
+              <div className='hw-timeline-filmstrip'>
+                {filmstripFrames.map((src, i) => (
+                  <img
+                    key={i}
+                    className='hw-timeline-filmstrip-tile'
+                    src={src}
+                    alt=''
+                    draggable={false}
+                  />
+                ))}
+              </div>
+              <div
+                className='hw-timeline-track'
+                ref={frameTrackRef}
+                onPointerMove={!isCropping ? handleFramePointerMove : undefined}
+                onPointerUp={!isCropping ? handleFramePointerUp : undefined}
+              >
+                <div
+                  className={`hw-timeline-handle hw-timeline-handle-left${frameDragging ? ' hw-timeline-handle-active' : ''}`}
+                  style={{ left: `${(activeFrameTime / gifDuration!) * 100}%` }}
+                  onPointerDown={!isCropping ? handleFramePointerDown : undefined}
+                />
+              </div>
+              <div className='hw-timeline-labels'>
+                <span className='hw-timeline-label-group'>
+                  <span className='hw-timeline-label-active'>
+                    Frame at {formatTime(activeFrameTime)} / {formatTime(gifDuration!)}
+                  </span>
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className='hw-crop-arrow'>
@@ -351,12 +449,37 @@ export function CropPreview({
           </span>
           <div className='hw-crop-viewport'>
             {syncedSrcs ? (
-              <img
-                ref={cropRef}
-                key={`crop-${cropSyncKey}`}
-                src={syncedSrcs.crop}
-                alt='Cropped'
-              />
+              <div className='hw-cropped-wrapper'>
+                {(() => {
+                  const showStaticFrame = appMode === 'screensaver' && file?.type === 'image/gif' && screensaverFramePreview;
+                  return (
+                    <img
+                      ref={cropRef}
+                      key={showStaticFrame ? `frame-${screensaverFramePreview}` : `crop-${cropSyncKey}`}
+                      src={showStaticFrame ? screensaverFramePreview : syncedSrcs.crop}
+                      alt={showStaticFrame ? 'Selected static frame' : 'Cropped'}
+                    />
+                  );
+                })()}
+                {appMode === 'screensaver' && (
+                  <div className='hw-bezel-overlay'>
+                    {Array.from({ length: preset.cols - 1 }).map((_, i) => (
+                      <div
+                        key={`col-${i}`}
+                        className='hw-bezel-grid-line hw-bezel-grid-line--vertical hw-bezel-grid-line--black'
+                        style={{ left: `${((i + 1) / preset.cols) * 100}%` }}
+                      />
+                    ))}
+                    {Array.from({ length: preset.rows - 1 }).map((_, i) => (
+                      <div
+                        key={`row-${i}`}
+                        className='hw-bezel-grid-line hw-bezel-grid-line--horizontal hw-bezel-grid-line--black'
+                        style={{ top: `${((i + 1) / preset.rows) * 100}%` }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
             ) : isCropping ? (
               <div className='hw-crop-loading hw-crop-active'>
                 {loading ? 'Loading ffmpeg' : 'Cropping'}
@@ -397,7 +520,7 @@ export function CropPreview({
                 background: isSplitting ? '#3b82f6' : '#22c55e',
               }}
             />
-            {isSplitting ? progressLabel : 'SPLIT GIF'}
+            {isSplitting ? progressLabel : (appMode === 'screensaver' ? 'GENERATE SCREENSAVER' : (file?.type === 'image/gif' ? 'SPLIT GIF' : 'SPLIT IMAGE'))}
           </button>
           {error && !isCropping && (
             <button

@@ -1,4 +1,6 @@
-import { encodePageFolder } from '../streamDeckProfile';
+import { encodePageFolder, buildChildPageManifest } from '../streamDeckProfile';
+import type { SplitResult } from '../ffmpeg';
+import { describe, it, expect } from 'vitest';
 
 describe('encodePageFolder', () => {
   it('produces a known output for a known UUID', () => {
@@ -38,5 +40,37 @@ describe('encodePageFolder', () => {
     const result1 = encodePageFolder(uuid);
     const result2 = encodePageFolder(uuid);
     expect(result1).toBe(result2);
+  });
+});
+
+describe('buildChildPageManifest', () => {
+  type ChildManifest = {
+    Name: string;
+    Controllers: Array<{
+      Actions: Record<string, { UUID: string; States: Array<{ Image: string }> }>;
+    }>;
+  };
+
+  it('points each tile action at its Images/tile_<col>_<row>.gif file and adds a synthetic (0,0) back button when none is present', () => {
+    const tiles: SplitResult[] = [
+      { col: 1, row: 1, blob: new Blob(), url: '', filename: 'tile_1_1.gif' },
+    ];
+    const manifest = buildChildPageManifest(tiles, 'Test Profile') as ChildManifest;
+
+    expect(manifest.Name).toBe('Test Profile');
+    expect(manifest.Controllers[0].Actions['1,1'].States[0].Image).toBe('Images/tile_1_1.gif');
+
+    // Synthetic (0,0) back button — image must be empty
+    expect(manifest.Controllers[0].Actions['0,0'].UUID).toBe('com.elgato.streamdeck.profile.backtoparent');
+    expect(manifest.Controllers[0].Actions['0,0'].States[0].Image).toBe('');
+  });
+
+  it('does not overwrite the (0,0) action when a real tile occupies that slot', () => {
+    const tiles: SplitResult[] = [
+      { col: 0, row: 0, blob: new Blob(), url: '', filename: 'tile_0_0.gif' },
+    ];
+    const manifest = buildChildPageManifest(tiles, 'Test') as ChildManifest;
+
+    expect(manifest.Controllers[0].Actions['0,0'].States[0].Image).toBe('Images/tile_0_0.gif');
   });
 });
