@@ -177,7 +177,9 @@ export function useFFmpeg() {
     return results
   }, [])
 
-  /** Generate a single padded screensaver image by splitting the cropped file and xstacking with black gaps. */
+  /** Generate a single padded screensaver image by splitting the cropped file and xstacking with black gaps.
+   *  GIF input → animated GIF output via 256-color palette pipeline.
+   *  Non-GIF input (PNG/JPG/WebP) → truecolor PNG output, palette stage skipped to preserve color fidelity. */
   const generateScreensaver = useCallback(async (
     file: File,
     cols: number,
@@ -188,16 +190,19 @@ export function useFFmpeg() {
   ): Promise<{ blob: Blob; url: string; filename: string }> => {
     const ffmpeg = ffmpegRef.current!
 
+    const isGif = file.type === 'image/gif'
     const total = rows * cols
 
     setProgress({ phase: 'palette', current: 0, total })
 
-    // Generate palette from the full cropped gif for consistent colors
-    await ffmpeg.exec([
-      '-i', 'cropped.gif',
-      '-vf', 'palettegen=stats_mode=full',
-      '-y', 'palette.png',
-    ])
+    // Only GIF output needs palette quantization; truecolor PNG output skips it.
+    if (isGif) {
+      await ffmpeg.exec([
+        '-i', 'cropped.gif',
+        '-vf', 'palettegen=stats_mode=full',
+        '-y', 'palette.png',
+      ])
+    }
 
     setProgress({ phase: 'splitting', current: 1, total })
 
@@ -229,30 +234,32 @@ export function useFFmpeg() {
       }
     }
 
-    filterComplex.push(`${inputsStr}xstack=inputs=${total}:layout=${layoutParams.join('|')}:fill=black[stacked];`)
-    filterComplex.push(`[stacked][1:v]paletteuse=dither=floyd_steinberg[out]`)
+    if (isGif) {
+      filterComplex.push(`${inputsStr}xstack=inputs=${total}:layout=${layoutParams.join('|')}:fill=black[stacked];`)
+      filterComplex.push(`[stacked][1:v]paletteuse=dither=floyd_steinberg[out]`)
+    } else {
+      filterComplex.push(`${inputsStr}xstack=inputs=${total}:layout=${layoutParams.join('|')}:fill=black[out]`)
+    }
 
-    const outExt = file.type === 'image/gif' ? 'gif' : 'png'
+    const outExt = isGif ? 'gif' : 'png'
     const outName = `screensaver.${outExt}`
 
-    await ffmpeg.exec([
-      '-i', 'cropped.gif',
-      '-i', 'palette.png',
-      '-filter_complex', filterComplex.join(' '),
-      '-map', '[out]',
-      '-y', outName,
-    ])
+    const execArgs = isGif
+      ? ['-i', 'cropped.gif', '-i', 'palette.png', '-filter_complex', filterComplex.join(' '), '-map', '[out]', '-y', outName]
+      : ['-i', 'cropped.gif',                       '-filter_complex', filterComplex.join(' '), '-map', '[out]', '-y', outName]
+
+    await ffmpeg.exec(execArgs)
 
     const data = await ffmpeg.readFile(outName)
     const part: BlobPart = typeof data === 'string' ? data : new Uint8Array(data)
     const blob = new Blob([part], { type: `image/${outExt}` })
     const url = URL.createObjectURL(blob)
 
-    await ffmpeg.deleteFile('palette.png')
+    if (isGif) await ffmpeg.deleteFile('palette.png')
     await ffmpeg.deleteFile(outName)
 
     setProgress({ phase: 'done', current: total, total })
-    
+
     return {
       blob,
       url,
