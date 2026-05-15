@@ -244,24 +244,26 @@ export function DeviceConfig({
           </span>
         </div>
 
-        <div className='hw-cutoff-toggle'>
-          <label className='hw-toggle-wrapper'>
-            <input
-              type='checkbox'
-              id='hw-custom-loop'
-              checked={customLoopEnabled}
-              onChange={(e) => onCustomLoopToggle(e.target.checked)}
-              disabled={isCropping || isSplitting}
-            />
-            <span className='hw-toggle-track'>
-              <span className='hw-toggle-thumb' />
+        {appMode === 'splitter' && (
+          <div className='hw-cutoff-toggle'>
+            <label className='hw-toggle-wrapper'>
+              <input
+                type='checkbox'
+                id='hw-custom-loop'
+                checked={customLoopEnabled}
+                onChange={(e) => onCustomLoopToggle(e.target.checked)}
+                disabled={isCropping || isSplitting}
+              />
+              <span className='hw-toggle-track'>
+                <span className='hw-toggle-thumb' />
+              </span>
+              <span className='hw-toggle-label'>Custom Loop</span>
+            </label>
+            <span className='hw-toggle-desc'>
+              Trim the animation loop length.
             </span>
-            <span className='hw-toggle-label'>Custom Loop</span>
-          </label>
-          <span className='hw-toggle-desc'>
-            Trim the animation loop length.
-          </span>
-        </div>
+          </div>
+        )}
         </div>
       </div>
     </>
