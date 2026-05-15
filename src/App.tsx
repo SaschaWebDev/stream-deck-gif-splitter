@@ -40,8 +40,10 @@ function App() {
   const [gifDuration, setGifDuration] = useState<number | null>(null);
   const [filmstripFrames, setFilmstripFrames] = useState<string[]>([]);
   const [appMode, setAppMode] = useState<AppMode>('splitter');
+  const [screensaverFrameTime, setScreensaverFrameTime] = useState(0);
   const trimRangeRef = useRef<{ start: number; end: number } | null>(null);
   const cropOffsetRef = useRef<{ x: number; y: number } | null>(null);
+  const screensaverFrameTimeRef = useRef(0);
 
   const {
     presetIndex,
@@ -107,6 +109,8 @@ function App() {
     trimRangeRef.current = null;
     cropOffsetRef.current = null;
     setGifDuration(null);
+    setScreensaverFrameTime(0);
+    screensaverFrameTimeRef.current = 0;
     filmstripFrames.forEach((url) => URL.revokeObjectURL(url));
     setFilmstripFrames([]);
   }, [resetProcessor, clearUpload, setCustomGridEnabled, setGridOffsetCol, setGridOffsetRow, filmstripFrames]);
@@ -125,6 +129,8 @@ function App() {
     trimRangeRef.current = null;
     cropOffsetRef.current = null;
     setCustomLoopEnabled(false);
+    setScreensaverFrameTime(0);
+    screensaverFrameTimeRef.current = 0;
     filmstripFrames.forEach((url) => URL.revokeObjectURL(url));
     setFilmstripFrames([]);
     const duration = await parseGifDuration(f);
@@ -286,10 +292,17 @@ function App() {
     setGridOffsetRow(row);
   }, [setGridOffsetCol, setGridOffsetRow]);
 
+  const handleScreensaverFrameChange = useCallback((time: number) => {
+    const max = gifDuration ?? 0;
+    const clamped = Math.max(0, Math.min(max, time));
+    setScreensaverFrameTime(clamped);
+    screensaverFrameTimeRef.current = clamped;
+  }, [gifDuration]);
+
   const handleSplit = useCallback(async () => {
     if (!file) return;
     if (appMode === 'screensaver') {
-      await performGenerateScreensaver(file, preset.cols, preset.rows, preset.tileWidth, preset.tileHeight, preset.gap);
+      await performGenerateScreensaver(file, preset.cols, preset.rows, preset.tileWidth, preset.tileHeight, preset.gap, screensaverFrameTimeRef.current);
     } else {
       await performSplit(file, preset.cols, preset.rows, preset.tileWidth, preset.tileHeight, gap);
     }
@@ -413,9 +426,11 @@ function App() {
                 gifDuration={gifDuration}
                 trimRange={trimRange}
                 filmstripFrames={filmstripFrames}
+                screensaverFrameTime={screensaverFrameTime}
                 onSplit={handleSplit}
                 onCropOffsetChange={handleCropOffsetChange}
                 onTrimChange={handleTrimChange}
+                onScreensaverFrameChange={handleScreensaverFrameChange}
               />
             </section>
           )}

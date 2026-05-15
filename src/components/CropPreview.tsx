@@ -23,9 +23,11 @@ export function CropPreview({
   gifDuration,
   trimRange,
   filmstripFrames,
+  screensaverFrameTime,
   onSplit,
   onCropOffsetChange,
   onTrimChange,
+  onScreensaverFrameChange,
 }: CropPreviewProps) {
   const origRef = useRef<HTMLImageElement>(null);
   const cropRef = useRef<HTMLImageElement>(null);
@@ -161,6 +163,45 @@ export function CropPreview({
     onTrimChange(localTrim.start, localTrim.end);
     setLocalTrim(null);
   }, [trimDragging, localTrim, onTrimChange]);
+
+  // Single-handle frame picker for Image Wallpaper mode (GIF input)
+  const frameTrackRef = useRef<HTMLDivElement>(null);
+  const [frameDragging, setFrameDragging] = useState(false);
+  const [localFrameTime, setLocalFrameTime] = useState<number | null>(null);
+  const frameDragRef = useRef<{ startClientX: number; startValue: number } | null>(null);
+
+  const showFramePicker = appMode === 'screensaver' && file?.type === 'image/gif' && gifDuration != null && gifDuration > 0;
+  const activeFrameTime = localFrameTime ?? screensaverFrameTime;
+
+  const handleFramePointerDown = useCallback((e: React.PointerEvent) => {
+    e.preventDefault();
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    setFrameDragging(true);
+    frameDragRef.current = {
+      startClientX: e.clientX,
+      startValue: activeFrameTime,
+    };
+  }, [activeFrameTime]);
+
+  const handleFramePointerMove = useCallback((e: React.PointerEvent) => {
+    if (!frameDragging || !frameDragRef.current || !frameTrackRef.current || !gifDuration) return;
+    const trackRect = frameTrackRef.current.getBoundingClientRect();
+    const trackWidth = trackRect.width;
+    const dx = e.clientX - frameDragRef.current.startClientX;
+    const dSeconds = (dx / trackWidth) * gifDuration;
+    const newValue = frameDragRef.current.startValue + dSeconds;
+    const clamped = Math.max(0, Math.min(gifDuration, newValue));
+    setLocalFrameTime(clamped);
+  }, [frameDragging, gifDuration]);
+
+  const handleFramePointerUp = useCallback((e: React.PointerEvent) => {
+    if (!frameDragging || localFrameTime == null) return;
+    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    setFrameDragging(false);
+    frameDragRef.current = null;
+    onScreensaverFrameChange(localFrameTime);
+    setLocalFrameTime(null);
+  }, [frameDragging, localFrameTime, onScreensaverFrameChange]);
 
   const showCropEditor = customCropEnabled && preview;
 
@@ -339,6 +380,40 @@ export function CropPreview({
                   {trimEnd < gifDuration - 0.05 && (
                     <span className='hw-timeline-label-original'>{formatTime(gifDuration)}</span>
                   )}
+                </span>
+              </div>
+            </div>
+          )}
+          {showFramePicker && (
+            <div className={`hw-timeline${isCropping ? ' hw-timeline-disabled' : ''}`}>
+              <div className='hw-timeline-filmstrip'>
+                {filmstripFrames.map((src, i) => (
+                  <img
+                    key={i}
+                    className='hw-timeline-filmstrip-tile'
+                    src={src}
+                    alt=''
+                    draggable={false}
+                  />
+                ))}
+              </div>
+              <div
+                className='hw-timeline-track'
+                ref={frameTrackRef}
+                onPointerMove={!isCropping ? handleFramePointerMove : undefined}
+                onPointerUp={!isCropping ? handleFramePointerUp : undefined}
+              >
+                <div
+                  className={`hw-timeline-handle hw-timeline-handle-left${frameDragging ? ' hw-timeline-handle-active' : ''}`}
+                  style={{ left: `${(activeFrameTime / gifDuration!) * 100}%` }}
+                  onPointerDown={!isCropping ? handleFramePointerDown : undefined}
+                />
+              </div>
+              <div className='hw-timeline-labels'>
+                <span className='hw-timeline-label-group'>
+                  <span className='hw-timeline-label-active'>
+                    Frame at {formatTime(activeFrameTime)} / {formatTime(gifDuration!)}
+                  </span>
                 </span>
               </div>
             </div>

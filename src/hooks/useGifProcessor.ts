@@ -75,6 +75,7 @@ export function useGifProcessor() {
     tileWidth: number,
     tileHeight: number,
     gap: number,
+    frameTime?: number,
   ) => {
     if (!croppedPreview) return;
     setError(null);
@@ -84,7 +85,7 @@ export function useGifProcessor() {
     setTilesReady(false);
 
     try {
-      const result = await generateScreensaver(file, cols, rows, tileWidth, tileHeight, gap);
+      const result = await generateScreensaver(file, cols, rows, tileWidth, tileHeight, gap, frameTime);
       updateScreensaverResult(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate screensaver');

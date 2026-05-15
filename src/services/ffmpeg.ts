@@ -177,9 +177,11 @@ export function useFFmpeg() {
     return results
   }, [])
 
-  /** Generate a single padded screensaver image by splitting the cropped file and xstacking with black gaps.
-   *  GIF input → animated GIF output via 256-color palette pipeline.
-   *  Non-GIF input (PNG/JPG/WebP) → truecolor PNG output, palette stage skipped to preserve color fidelity. */
+  /** Generate a single padded static image wallpaper by extracting a frame (for GIF input)
+   *  or using the cropped image directly (for static input), then xstacking the cells with
+   *  black bezel padding. Output is always a truecolor PNG.
+   *
+   *  For GIF input, frameTime selects which frame becomes the static wallpaper. */
   const generateScreensaver = useCallback(async (
     file: File,
     cols: number,
@@ -187,6 +189,7 @@ export function useFFmpeg() {
     cellWidth: number,
     cellHeight: number,
     gap: number,
+    frameTime?: number,
   ): Promise<{ blob: Blob; url: string; filename: string }> => {
     const ffmpeg = ffmpegRef.current!
 
@@ -195,12 +198,16 @@ export function useFFmpeg() {
 
     setProgress({ phase: 'palette', current: 0, total })
 
-    // Only GIF output needs palette quantization; truecolor PNG output skips it.
+    // GIF input: extract the user-selected frame to a static PNG.
+    // Non-GIF input: cropped.gif is already a single static image, use it directly.
+    const inputFile = isGif ? 'frame.png' : 'cropped.gif'
     if (isGif) {
+      const t = Math.max(0, frameTime ?? 0)
       await ffmpeg.exec([
+        '-ss', t.toFixed(3),
         '-i', 'cropped.gif',
-        '-vf', 'palettegen=stats_mode=full',
-        '-y', 'palette.png',
+        '-frames:v', '1',
+        '-y', 'frame.png',
       ])
     }
 
@@ -219,7 +226,6 @@ export function useFFmpeg() {
       }
     }
 
-    // Stack them with gaps
     let inputsStr = ''
     for (let i = 0; i < total; i++) {
       inputsStr += `[c${i}]`
@@ -234,28 +240,23 @@ export function useFFmpeg() {
       }
     }
 
-    if (isGif) {
-      filterComplex.push(`${inputsStr}xstack=inputs=${total}:layout=${layoutParams.join('|')}:fill=black[stacked];`)
-      filterComplex.push(`[stacked][1:v]paletteuse=dither=floyd_steinberg[out]`)
-    } else {
-      filterComplex.push(`${inputsStr}xstack=inputs=${total}:layout=${layoutParams.join('|')}:fill=black[out]`)
-    }
+    filterComplex.push(`${inputsStr}xstack=inputs=${total}:layout=${layoutParams.join('|')}:fill=black[out]`)
 
-    const outExt = isGif ? 'gif' : 'png'
-    const outName = `screensaver.${outExt}`
+    const outName = 'screensaver.png'
 
-    const execArgs = isGif
-      ? ['-i', 'cropped.gif', '-i', 'palette.png', '-filter_complex', filterComplex.join(' '), '-map', '[out]', '-y', outName]
-      : ['-i', 'cropped.gif',                       '-filter_complex', filterComplex.join(' '), '-map', '[out]', '-y', outName]
-
-    await ffmpeg.exec(execArgs)
+    await ffmpeg.exec([
+      '-i', inputFile,
+      '-filter_complex', filterComplex.join(' '),
+      '-map', '[out]',
+      '-y', outName,
+    ])
 
     const data = await ffmpeg.readFile(outName)
     const part: BlobPart = typeof data === 'string' ? data : new Uint8Array(data)
-    const blob = new Blob([part], { type: `image/${outExt}` })
+    const blob = new Blob([part], { type: 'image/png' })
     const url = URL.createObjectURL(blob)
 
-    if (isGif) await ffmpeg.deleteFile('palette.png')
+    if (isGif) await ffmpeg.deleteFile('frame.png')
     await ffmpeg.deleteFile(outName)
 
     setProgress({ phase: 'done', current: total, total })
@@ -263,7 +264,7 @@ export function useFFmpeg() {
     return {
       blob,
       url,
-      filename: file.name.replace(/\.[^.]+$/i, '') + `_screensaver.${outExt}`,
+      filename: file.name.replace(/\.[^.]+$/i, '') + '_screensaver.png',
     }
   }, [])
 

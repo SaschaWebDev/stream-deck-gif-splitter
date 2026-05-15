@@ -82,9 +82,11 @@ export interface CropPreviewProps {
   gifDuration: number | null;
   trimRange: { start: number; end: number } | null;
   filmstripFrames: string[];
+  screensaverFrameTime: number;
   onSplit: () => void;
   onCropOffsetChange: (x: number, y: number) => void;
   onTrimChange: (start: number, end: number) => void;
+  onScreensaverFrameChange: (time: number) => void;
 }
 
 export interface ResultsPanelProps {
