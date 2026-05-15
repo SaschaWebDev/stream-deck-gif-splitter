@@ -1,14 +1,17 @@
 import type { RefObject } from 'react';
+import type { Preset } from '../types';
 
 interface ScreensaverPanelProps {
   screensaverResult: { blob: Blob; url: string; filename: string } | null;
   isSplitting: boolean;
+  basePreset: Preset;
   resultsRef: RefObject<HTMLDivElement | null>;
 }
 
 export function ScreensaverPanel({
   screensaverResult,
   isSplitting,
+  basePreset,
   resultsRef,
 }: ScreensaverPanelProps) {
   if (!isSplitting && !screensaverResult) return null;
@@ -33,6 +36,7 @@ export function ScreensaverPanel({
 
         {screensaverResult && (
           <div className='hw-results-bar'>
+            <span className='hw-device-badge'>{basePreset.label}</span>
             <div className='hw-results-buttons'>
               <button
                 className='hw-download-button'
@@ -58,7 +62,7 @@ export function ScreensaverPanel({
                 alt='Padded Image Wallpaper Preview'
               />
             </div>
-            <p className='hw-sub-text hw-screensaver-note'>
+            <p className='hw-screensaver-note'>
               Set this file as your Stream Deck screensaver in the official Elgato software. The black bars ensure no parts of your image are lost to the physical bezels!
             </p>
           </>

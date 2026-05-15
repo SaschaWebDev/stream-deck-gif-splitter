@@ -495,6 +495,7 @@ function App() {
             <ScreensaverPanel
               screensaverResult={screensaverResult}
               isSplitting={isSplitting}
+              basePreset={basePreset}
               resultsRef={resultsRef}
             />
           )}
