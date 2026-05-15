@@ -7,13 +7,12 @@ export function HeroSection() {
         alt='Stream Deck GIF Splitter'
       />
       <h1 className='hw-title'>
-        Split GIFs & images for
+        Split animated GIFs for
         <br /> your <span className='hw-title-accent'>Stream Deck</span>
       </h1>
       <p className='hw-subtitle'>
-        Drop a GIF or an image below to split it into a grid of tiles,
-        perfectly sized for your Stream Deck background. Cutoff mode is
-        automatically disabled for the screensaver maker.
+        Drop a GIF file below to split it into a grid of animated tiles,
+        perfectly sized for your Stream Deck background.
       </p>
     </section>
   );

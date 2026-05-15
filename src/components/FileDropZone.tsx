@@ -41,9 +41,7 @@ export function FileDropZone({
             />
             <div className='hw-file-meta'>
               <span className='hw-file-name'>{file.name}</span>
-              <span className='hw-file-size'>
-                {formatSize(file.size)}
-              </span>
+              <span className='hw-file-size'>{formatSize(file.size)}</span>
             </div>
             <button
               className='hw-file-remove'
@@ -75,11 +73,13 @@ export function FileDropZone({
               </svg>
             </div>
             <p className='hw-drop-label'>
-              Drag & drop your {appMode === 'screensaver' ? 'image or GIF' : 'GIF'} here, or{' '}
-              <span className='hw-drop-browse'>browse</span>
+              Drag & drop your {appMode === 'screensaver' ? 'image' : 'GIF'}{' '}
+              here, or <span className='hw-drop-browse'>browse</span>
             </p>
             <span className='hw-drop-hint'>
-              {appMode === 'screensaver' ? 'Images and .gif files are accepted' : 'Only .gif files are accepted'}
+              {appMode === 'screensaver'
+                ? 'Image files are accepted'
+                : 'Only .gif files are accepted'}
             </span>
           </div>
         )}
