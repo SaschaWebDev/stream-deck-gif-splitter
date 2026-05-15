@@ -342,7 +342,7 @@ function App() {
               className={`hw-mode-toggle-label${appMode === 'screensaver' ? ' active' : ''}`}
               onClick={() => handleAppModeChange('screensaver')}
             >
-              Screensaver Maker
+              Image Wallpaper
             </button>
           </div>
 
